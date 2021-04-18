@@ -1,18 +1,12 @@
-defmodule Mpdecimal do
-  @moduledoc """
-  Documentation for `Mpdecimal`.
-  """
+defmodule MPDecimal do
+  @on_load :load_nifs
 
-  @doc """
-  Hello world.
+  def load_nifs do
+    path = :filename.join(:code.priv_dir(:mpdecimal), 'mpdecimal_nif')
+    :erlang.load_nif(path, 0)
+  end
 
-  ## Examples
-
-      iex> Mpdecimal.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def mpdecimal_zero do
+    raise "NIF mpdecimal_zero/0 not implemented"
   end
 end
