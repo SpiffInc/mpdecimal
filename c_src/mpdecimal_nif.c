@@ -16,7 +16,7 @@ static ERL_NIF_TERM mpdecimal_zero(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
-  {"mpdecimal_zero", 0, mpdecimal_zero}
+  {"zero", 0, mpdecimal_zero}
 };
 
-ERL_NIF_INIT(Elixir.MPDecimal, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, NULL, NULL, NULL, NULL)

@@ -1,8 +1,8 @@
-defmodule MpdecimalTest do
+defmodule MPDecimalTest do
   use ExUnit.Case
-  doctest Mpdecimal
+  doctest MPDecimal
 
-  test "greets the world" do
-    assert Mpdecimal.hello() == :world
+  test "zero" do
+    assert MPDecimal.zero() == 42
   end
 end
