@@ -1,5 +1,5 @@
 CFLAGS ?= -g -O3
-CFLAGS += -Wall -Wno-format-truncation
+CFLAGS += -Wall
 
 CFLAGS += -I"$(ERTS_INCLUDE_DIR)"
 CFLAGS += -Ic_src
@@ -20,8 +20,7 @@ else
     endif
 endif
 
-NIF_SRC=\
-	c_src/mpdecimal_nif.c
+NIF_SRC=c_src/*.c
 
 calling_from_make:
 	mix compile

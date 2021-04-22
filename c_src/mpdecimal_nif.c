@@ -7,10 +7,13 @@
 #endif
 
 #include "erl_nif.h"
+#include "mpdecimal-2.5.1/libmpdec/mpdecimal.h"
 
 static ERL_NIF_TERM mpdecimal_zero(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
   int a = 42;
+  const char* version = mpd_version();
+  printf("%s", version);
   return enif_make_int(env, a);
 }
 
