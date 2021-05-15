@@ -31,10 +31,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
   // convert elixir string arguments into mpdecimal structs
   enif_inspect_binary(env, argv[0], &base);
   enif_inspect_binary(env, argv[1], &power);
-
-  printf("%s ^ %s\n", base.data, power.data);
-
-  // setup context
   mpd_init(&ctx, 28);
 	ctx.traps = 0;
   a = mpd_new(&ctx);
@@ -49,7 +45,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
   // convert result to an elixir string
 	rstring = mpd_to_sci(result, 1);
 	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
-	printf("%s  %s\n", rstring, status_str);
   unsigned char* bin_ptr = enif_make_new_binary(env, strlen(rstring), &return_value);
   strcpy(bin_ptr, rstring);
 
