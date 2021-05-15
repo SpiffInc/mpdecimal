@@ -35,9 +35,20 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
   ErlNifBinary power;
   ERL_NIF_TERM return_value;
 
+  if(argc != 2 ||
+    !enif_is_binary(env, argv[0]) ||
+    !enif_is_binary(env, argv[1])) {
+    return enif_make_badarg(env);
+  }
+
+  enif_fprintf(stdout, "base: %T\n", argv[0]);
+  enif_fprintf(stdout, "power: %T\n", argv[1]);
+
   // convert elixir string arguments into mpdecimal structs
   enif_inspect_binary(env, argv[0], &base);
   enif_inspect_binary(env, argv[1], &power);
+  printf("base: %s\n\tsize: %d\n\tstrlen: %d\n", base.data, base.size, strlen(base.data));
+  printf("power: %s\n\tsize: %d\n\tstrlen: %d\n", power.data, power.size, strlen(power.data));
   a = mpd_new(&ctx);
 	b = mpd_new(&ctx);
 	mpd_set_string(a, base.data, &ctx);
