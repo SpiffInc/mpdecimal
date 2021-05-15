@@ -10,6 +10,14 @@
 
 #include "mpdecimal.h"
 
+static mpd_context_t ctx;
+
+static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
+  mpd_init(&ctx, 28);
+	ctx.traps = 0;
+  return 0;
+}
+
 static ERL_NIF_TERM mpdecimal_zero(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
   const char* version = mpd_version();
@@ -19,7 +27,6 @@ static ERL_NIF_TERM mpdecimal_zero(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-  mpd_context_t ctx;
   mpd_t *a, *b;
 	mpd_t *result;
 	char *rstring;
@@ -31,8 +38,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
   // convert elixir string arguments into mpdecimal structs
   enif_inspect_binary(env, argv[0], &base);
   enif_inspect_binary(env, argv[1], &power);
-  mpd_init(&ctx, 28);
-	ctx.traps = 0;
   a = mpd_new(&ctx);
 	b = mpd_new(&ctx);
 	mpd_set_string(a, base.data, &ctx);
@@ -63,4 +68,4 @@ static ErlNifFunc nif_funcs[] = {
   {"zero", 0, mpdecimal_zero}
 };
 
-ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, load, NULL, NULL, NULL)
