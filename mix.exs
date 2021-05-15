@@ -24,6 +24,7 @@ defmodule Mpdecimal.MixProject do
   defp deps do
     [
       {:elixir_make, "~> 0.6", runtime: false},
+      {:benchee, "~> 1.0", only: :dev},
     ]
   end
 end
