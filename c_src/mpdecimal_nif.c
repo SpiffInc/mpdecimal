@@ -41,27 +41,27 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     return enif_make_badarg(env);
   }
 
-  enif_fprintf(stdout, "base: %T\r\n", argv[0]);
-  enif_fprintf(stdout, "power: %T\r\n", argv[1]);
+  enif_fprintf(stdout, "base  (as binary): %T\r\n", argv[0]);
+  enif_fprintf(stdout, "power (as binary): %T\r\n", argv[1]);
 
   // convert elixir string arguments into mpdecimal structs
   enif_inspect_binary(env, argv[0], &base);
   enif_inspect_binary(env, argv[1], &power);
-  fprintf(stdout, "base: %s\r\n  - size: %d\r\n  - strlen: %d\r\n", base.data, base.size, strlen(base.data));
-  fprintf(stdout, "power: %s\r\n\tsize: %d\r\n\tstrlen: %d\r\n", power.data, power.size, strlen(power.data));
+  fprintf(stdout, "base  (as cstring): %s\r\n  - binary size: %d\r\n  - cstring strlen: %d\r\n", base.data, base.size, strlen(base.data));
+  fprintf(stdout, "power (as cstring): %s\r\n  - binary size: %d\r\n  - cstring strlen: %d\r\n", power.data, power.size, strlen(power.data));
 
-	fprintf(stdout, "base: ");
+	fprintf(stdout, "base encoding:  ");
 	unsigned char* index = base.data;
 	do {
-		fprintf(stdout, "0x%2x ", *index);
-	} while (*(index++) != '0');
+		fprintf(stdout, "0x%02x ", *index);
+	} while (*(index++) != 0);
 	fprintf(stdout, "\r\n");
 
-	fprintf(stdout, "power: ");
+	fprintf(stdout, "power encoding: ");
 	index = power.data;
 	do {
-		fprintf(stdout, "0x%2x ", *index);
-	} while (*(index++) != '0');
+		fprintf(stdout, "0x%02x ", *index);
+	} while (*(index++) != 0);
 	fprintf(stdout, "\r\n");
 
   a = mpd_new(&ctx);
