@@ -64,10 +64,20 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 	} while (*(index++) != 0);
 	fprintf(stdout, "\r\n");
 
+	// This relies on the property that the Erlang binary encoding uses only
+	// single-byte ASCII-compatible values.
+	// 
+	// TODO: Check whether the source of this data (Elixir Decimal library)
+	// guarantees this property.
+	char* base_cstring = (char*) malloc((base.size + 1)*sizeof(char));
+	char* power_cstring = (char*) malloc((power.size + 1)*sizeof(char));
+	strncpy(base_cstring, base.data, base.size);
+	strncpy(power_cstring, power.data, power.size);
+
   a = mpd_new(&ctx);
 	b = mpd_new(&ctx);
-	mpd_set_string(a, base.data, &ctx);
-	mpd_set_string(b, power.data, &ctx);
+	mpd_set_string(a, base_cstring, &ctx);
+	mpd_set_string(b, power_cstring, &ctx);
 
   // run the calculation
   result = mpd_new(&ctx);
@@ -85,6 +95,10 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 	mpd_del(result);
 	mpd_free(rstring);
 
+	// Clean up locally-used memory.
+	free(base_cstring);
+	free(power_cstring);
+	
 	return return_value;
 }
 
