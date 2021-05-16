@@ -6,6 +6,8 @@
 #include <unistd.h>
 #endif
 
+#define NIF_DEBUG
+
 #include "erl_nif.h"
 
 #include "mpdecimal.h"
@@ -16,13 +18,6 @@ static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   mpd_init(&ctx, 28);
 	ctx.traps = 0;
   return 0;
-}
-
-static ERL_NIF_TERM mpdecimal_zero(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
-{
-  const char* version = mpd_version();
-	enif_fprintf(stdout,"libmpdec version: %s\n",version);
-  return enif_make_int(env, 0);
 }
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -41,12 +36,16 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     return enif_make_badarg(env);
   }
 
+  #ifdef NIF_DEBUG
   enif_fprintf(stdout, "base  (as binary): %T\r\n", argv[0]);
   enif_fprintf(stdout, "power (as binary): %T\r\n", argv[1]);
+  #endif
 
   // convert elixir string arguments into mpdecimal structs
   enif_inspect_binary(env, argv[0], &base);
   enif_inspect_binary(env, argv[1], &power);
+
+  #ifdef NIF_DEBUG
   fprintf(stdout, "base  (as cstring): %s\r\n  - binary size: %d\r\n  - cstring strlen: %d\r\n", base.data, base.size, strlen(base.data));
   fprintf(stdout, "power (as cstring): %s\r\n  - binary size: %d\r\n  - cstring strlen: %d\r\n", power.data, power.size, strlen(power.data));
 
@@ -63,6 +62,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 		fprintf(stdout, "0x%02x ", *index);
 	} while (*(index++) != 0);
 	fprintf(stdout, "\r\n");
+  #endif
 
 	// This relies on the property that the Erlang binary encoding uses only
 	// single-byte ASCII-compatible values.
@@ -79,12 +79,22 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 	mpd_set_string(a, base_cstring, &ctx);
 	mpd_set_string(b, power_cstring, &ctx);
 
+  #ifdef NIF_DEBUG
+  rstring = mpd_to_sci(a, 1);
+  enif_fprintf(stdout, "mpd base: %s\r\n", rstring);
+  rstring = mpd_to_sci(b, 1);
+  enif_fprintf(stdout, "mpd power: %s\r\n", rstring);
+  #endif
+
   // run the calculation
   result = mpd_new(&ctx);
 	mpd_pow(result, a, b, &ctx);
 
   // convert result to an elixir string
 	rstring = mpd_to_sci(result, 1);
+  #ifdef NIF_DEBUG
+  enif_fprintf(stdout, "mpd result: %s\r\n", rstring);
+  #endif
 	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
   unsigned char* bin_ptr = enif_make_new_binary(env, strlen(rstring), &return_value);
   strcpy(bin_ptr, rstring);
@@ -104,8 +114,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
 
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
-  {"power", 2, mpdecimal_power},
-  {"zero", 0, mpdecimal_zero}
+  {"power", 2, mpdecimal_power}
 };
 
 ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, load, NULL, NULL, NULL)

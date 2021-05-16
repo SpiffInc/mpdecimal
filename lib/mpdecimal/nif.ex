@@ -22,8 +22,4 @@ defmodule MPDecimal.Nif do
   def power(_base, _power) do
     raise "NIF power/2 not implemented"
   end
-
-  def zero do
-    raise "NIF zero/0 not implemented"
-  end
 end

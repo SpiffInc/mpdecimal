@@ -2,10 +2,6 @@ defmodule MPDecimalTest do
   use ExUnit.Case
   doctest MPDecimal
 
-  test "zero" do
-    assert MPDecimal.zero() == 0
-  end
-
   test "correct digit handling" do
     result = MPDecimal.Nif.power("3.14159", "1.58732")
     assert result == "6.153686306332765322891030633"
