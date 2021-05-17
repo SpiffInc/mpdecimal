@@ -6,7 +6,7 @@
 #include <unistd.h>
 #endif
 
-#define NIF_DEBUG
+// #define NIF_DEBUG
 
 #include "erl_nif.h"
 
@@ -39,7 +39,9 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM
   mpd_t *a, *b;
 	mpd_t *result;
 	char *rstring;
+#ifdef NIF_DEBUG
 	char status_str[MPD_MAX_FLAG_STRING];
+#endif
   ErlNifBinary base;
   ErlNifBinary power;
   ERL_NIF_TERM return_value;
