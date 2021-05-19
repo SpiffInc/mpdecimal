@@ -6,21 +6,40 @@
 #include <unistd.h>
 #endif
 
-// #define NIF_DEBUG
-
 #include "erl_nif.h"
 
 #include "mpdecimal.h"
 
-static mpd_context_t ctx;
+#define NIF_DEBUG
 
-static int load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
-	// TODO: Because the MPD context is persistent, status flags and error
-	// conditions will accumulate across multiple calls into this library. Do we
-	// need to do maintenance of any kind on these flags?
-	mpd_init(&ctx, 28);
-	ctx.traps = 0;
-  return 0;
+// TODO: Pass the precision in as an argument in load_info.
+int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info) {
+	// Use the memory allocator provided by the Erlang VM for all mpd memory.
+	mpd_mallocfunc = enif_alloc;
+	mpd_reallocfunc = enif_realloc;
+	// Since enif_calloc is not implemented, emulate mpd_calloc.
+	mpd_callocfunc = mpd_callocfunc_em;
+	mpd_free = enif_free;
+
+ 	mpd_context_t* ctx = *priv_data = mpd_sh_alloc(sizeof(mpd_context_t), 1, 1);
+
+	// Initialize the MPD context with 28 digits of precision.
+	mpd_init(ctx, 28);
+	ctx->traps = MPD_Errors;
+	if (ctx->status || ctx->newtrap) {
+		return 1;
+	}
+  
+	return 0;
+}
+
+void unload(ErlNifEnv* caller_env, void* priv_data) {
+	enif_free(priv_data);
+	return;
+}
+
+int upgrade(ErlNifEnv* caller_env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info) {
+	return load(caller_env, old_priv_data, load_info);
 }
 
 #ifdef NIF_DEBUG
@@ -36,112 +55,82 @@ static void printf_data_hex(const unsigned char* data, size_t size)
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-  mpd_t *a, *b;
-	mpd_t *result;
-	char *rstring;
+	// TODO: Review which of these should be dynamically allocated vs. allocated on the stack.
+	mpd_context_t* ctx = (mpd_context_t*) enif_priv_data(env);
+	mpd_t* base;
+	mpd_t* exponent;
+	mpd_t* result;
+	char*  result_string;
 #ifdef NIF_DEBUG
-	char status_str[MPD_MAX_FLAG_STRING];
+	char status_string[MPD_MAX_FLAG_STRING];
 #endif
-  ErlNifBinary base;
-  ErlNifBinary power;
+  ErlNifBinary base_binary;
+  ErlNifBinary exponent_binary;
   ERL_NIF_TERM return_value;
 
 	// Convert parameters into Erlang binaries.
   if (argc != 2 ||
-		  !enif_inspect_binary(env, argv[0], &base) ||
-		  !enif_inspect_binary(env, argv[1], &power)) {
+		  !enif_inspect_binary(env, argv[0], &base_binary) ||
+		  !enif_inspect_binary(env, argv[1], &exponent_binary)) {
     return enif_make_badarg(env);
   }
 
 #ifdef NIF_DEBUG
 	printf("----Parameters----\r\n");
   enif_fprintf(stdout, "base (binary): %T\r\n", argv[0]);
-	printf("  - size: %zu\r\n", base.size);
+	printf("  - size: %zu\r\n", base_binary.size);
 	printf("  - encoding: ");
-	printf_data_hex(base.data, base.size);
+	printf_data_hex(base_binary.data, base_binary.size);
 
-  enif_fprintf(stdout, "power (binary): %T\r\n", argv[1]);
-	printf("  - size: %zu\r\n", power.size);
+  enif_fprintf(stdout, "exponent (binary): %T\r\n", argv[1]);
+	printf("  - size: %zu\r\n", exponent_binary.size);
 	printf("  - encoding: ");
-	printf_data_hex(power.data, power.size);
-#endif
-
-#ifdef NIF_DEBUG
-	printf("\r\n----Converting parameters from Erlang binary to cstring----\r\n");
-#endif
-	// This relies on the property that the Erlang binary encoding uses only
-	// single-byte ASCII-compatible values.
-	// 
-	// TODO: Add checks to validate that the string contains only valid ASCII
-	// characters. (i.e. Assert that the above property is true.)
-	//
-	// Allocate the same number of bytes as used by the Erlang binary, plus one
-	// for the null terminator.
-	char* base_cstring = (char*) enif_alloc((base.size + 1)*sizeof(char));
-	char* power_cstring = (char*) enif_alloc((power.size + 1)*sizeof(char));
-	strncpy(base_cstring, (char*) base.data, base.size);
-	strncpy(power_cstring, (char*) power.data, power.size);
-	// Manually add null terminator to each string.
-	base_cstring[base.size] = '\0';
-	power_cstring[power.size] = '\0';
-
-#ifdef NIF_DEBUG
-	printf("base (cstring):  %s\r\n", base_cstring);
-	printf("  - encoding: ");
-	printf_data_hex((unsigned char*) base_cstring, base.size + 1);
-	printf("power (cstring): %s\r\n", power_cstring);
-	printf("  - encoding: ");
-	printf_data_hex((unsigned char*) power_cstring, power.size + 1);
+	printf_data_hex(exponent_binary.data, exponent_binary.size);
 #endif
 
+  base = mpd_new(ctx);
+	exponent = mpd_new(ctx);
+
+	mpd_set_string(base, (char*) base_binary.data, ctx);
 #ifdef NIF_DEBUG
-	printf("\r\n----Converting parameters from cstring to mpd----\r\n");
-	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
-	printf("Inital mpd status: %s\r\n", status_str);
+	mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
+  result_string = mpd_to_sci(base, 1);
+  printf("base (mpd):   %s\r\n", result_string);
+	printf("  - status: %s\r\n", status_string);
 #endif
-  a = mpd_new(&ctx);
-	b = mpd_new(&ctx);
-	mpd_set_string(a, base_cstring, &ctx);
+
+	mpd_set_string(exponent, (char*) exponent_binary.data, ctx);
 #ifdef NIF_DEBUG
-	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
-  rstring = mpd_to_sci(a, 1);
-  printf("base (mpd):   %s\r\n", rstring);
-	printf("  - status: %s\r\n", status_str);
-#endif
-	mpd_set_string(b, power_cstring, &ctx);
-#ifdef NIF_DEBUG
-	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
-  rstring = mpd_to_sci(b, 1);
-  printf("power (mpd):  %s\r\n", rstring);
-	printf("  - status: %s\r\n", status_str);
+	mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
+  result_string = mpd_to_sci(exponent, 1);
+  printf("power (mpd):  %s\r\n", result_string);
+	printf("  - status: %s\r\n", status_string);
 #endif
 
 #ifdef NIF_DEBUG
 	printf("\r\n----Perfoming the calculation----\r\n");
 #endif
-  result = mpd_new(&ctx);
-	mpd_pow(result, a, b, &ctx);
+
+	// TODO: Use the quiet version of mpd_pow in order to avoid polluting the
+	// shared context. (This makes us thread safe.)
+ 	result = mpd_new(ctx);
+	mpd_pow(result, base, exponent, ctx);
 
   // Convert result to cstring.
-	rstring = mpd_to_sci(result, 1);
+	result_string = mpd_to_sci(result, 1);
 #ifdef NIF_DEBUG
-  printf("result (mpd): %s\r\n", rstring);
-	mpd_snprint_flags(status_str, MPD_MAX_FLAG_STRING, ctx.status);
-	printf("  - status: %s\r\n", status_str);
+  printf("result (mpd): %s\r\n", result_string);
+	mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
+	printf("  - status: %s\r\n", status_string);
 #endif
-  unsigned char* bin_ptr = enif_make_new_binary(env, strlen(rstring), &return_value);
-  memcpy(bin_ptr, rstring, strlen(rstring));
+  unsigned char* bin_ptr = enif_make_new_binary(env, strlen(result_string), &return_value);
+  memcpy(bin_ptr, result_string, strlen(result_string));
 
-  // Clean up mpdecimal memory.
-	mpd_del(a);
-	mpd_del(b);
+	mpd_del(base);
+	mpd_del(exponent);
 	mpd_del(result);
-	mpd_free(rstring);
+	mpd_free(result_string);
 
-	// Clean up memory that was allocated locally.
-	enif_free(base_cstring);
-	enif_free(power_cstring);
-	
 	return return_value;
 }
 
@@ -150,4 +139,4 @@ static ErlNifFunc nif_funcs[] = {
   {"power", 2, mpdecimal_power}
 };
 
-ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.MPDecimal.Nif, nif_funcs, load, /* reload deprecated since OTP20 */ NULL, upgrade, unload)
