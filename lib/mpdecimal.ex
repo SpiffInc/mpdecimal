@@ -9,7 +9,6 @@ defmodule MPDecimal do
     
     case Nif.power(base, exponent) do
       {:ok, result} -> Decimal.new(result)
-      # TODO: message should be a string, not an atom
       {:error, message} -> raise(MPDecimal.Error, message: message)
     end
   end

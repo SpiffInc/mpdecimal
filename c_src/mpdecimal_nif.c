@@ -34,15 +34,15 @@ static void mpd_custom_traphandler(mpd_context_t* ctx)
 int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info) {
   setup_mpd_mem_alloc();
 
-  // The mpdecimal library provides a default trap handler that raises SIGFPE.
-  // While the BEAM VM happens to ignore SIGFPE, it's a bit cleaner not to
-  // raise SIGFPE at all.
+  // The default trap handler raises SIGFPE. While the BEAM VM happens to
+  // ignore SIGFPE (as of OTP 21), it's a bit safer not to rely on this
+  // behavior and just not raise SIGFPE at all.
   mpd_traphandler = mpd_custom_traphandler;
 
   mpd_context_t* ctx = *priv_data = mpd_sh_alloc(sizeof(mpd_context_t), 1, 1);
 
   // Configure the mpdecimal library context to match the Elixir Decimal
-  // library default context:
+  // library default context configuration:
   //  - precision       28 Digits
   //  - rounding mode   Half Up
   //  - traps           Invalid Operation, Division by Zero
@@ -94,9 +94,22 @@ static void nif_debug_print_parameter(const char* name, const ERL_NIF_TERM* term
 
 static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
 {
-  char signal_list[MPD_MAX_SIGNAL_LIST];
-  mpd_lsnprint_signals(signal_list, MPD_MAX_SIGNAL_LIST, ctx->newtrap, NULL);
-  return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, signal_list));
+  char signal_list_string[MPD_MAX_SIGNAL_LIST];
+  mpd_ssize_t signal_list_strlen;
+  ERL_NIF_TERM signal_list_term;
+  
+  signal_list_strlen = mpd_lsnprint_signals(signal_list_string, MPD_MAX_SIGNAL_LIST, ctx->newtrap, NULL);
+  if (signal_list_strlen == -1) {
+    // In the case of failure, create an empty string.
+    signal_list_string[0] = '\0';
+    signal_list_strlen = 0;
+  }
+
+  memcpy(enif_make_new_binary(env, signal_list_strlen, &signal_list_term),
+         signal_list_string,
+         signal_list_strlen);
+
+  return enif_make_tuple2(env, enif_make_atom(env, "error"), signal_list_term);
 }
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
@@ -126,8 +139,10 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
   nif_debug_print_parameter("exp", &argv[1], &exp_binary);
 #endif
 
-  // Make a local copy of the previously-initialized MPD context in order to
-  // make this function thread safe.
+  // Ensure Thread Safety
+  // Create a copy of the (previously-initialized) MPD context on the stack.
+  // Hereafter, any function calls into the mpdecimal library interact with
+  // this copy of the context, which is used only by the current thread.
   ctx = *((mpd_context_t*) enif_priv_data(env));
 
   base = mpd_new(&ctx);
@@ -149,6 +164,8 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     return nif_make_error_tuple(env, &ctx);
   }
 
+  // Expects the binary to contain a cstring, properly formatted with the null
+  // terminator by Elixir code.
   mpd_set_string(exp, (char*) exp_binary.data, &ctx);
   if (ctx.newtrap) {
     mpd_del(base);
@@ -171,16 +188,18 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     return nif_make_error_tuple(env, &ctx);
   }
 
-  result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 0);
+  result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 1);
   
   mpd_del(result);
 
   if (result_string == NULL) {
-    // TODO: Return an error tuple with no value for the 2nd element (ctx.newtrap == 0)?
+    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
+    // sensitive.
+    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
     return nif_make_error_tuple(env, &ctx);
   }
 
-  // This does *not* copy the null terminator into the Erlang binary.
+  // Package the result string into an Erlang binary.
   memcpy(enif_make_new_binary(env, result_strlen, &result_term),
          result_string,
          result_strlen);
