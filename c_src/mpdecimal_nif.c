@@ -68,14 +68,14 @@ static void nif_debug_print_data_hex(const unsigned char* data, size_t size)
 {
   const unsigned char* end = data + size;
   while (data < end) {
-  	enif_fprintf(stdout, "0x%02x ", *(data++));
+  	printf("0x%02x ", *(data++));
   }
-  enif_fprintf(stdout, "\r\n");
+  printf("\r\n");
 }
 
 static void nif_debug_print_parameter(const char* name, const ERL_NIF_TERM* term, const ErlNifBinary* binary)
 {
-  enif_fprintf(stdout, "%s\r\n" \
+  printf(              "%s\r\n" \
                        "  raw       ", name);
   nif_debug_print_data_hex(binary->data, binary->size);
 
@@ -85,8 +85,8 @@ static void nif_debug_print_parameter(const char* name, const ERL_NIF_TERM* term
                        *term,
                        binary->size);
 
-  enif_fprintf(stdout, "  cstring   %s\r\n" \
-                       "    length  %d characters\r\n\n",
+  printf(              "  cstring   %s\r\n" \
+                       "    length  %zu characters\r\n\n",
                        binary->data,
                        strlen((char*) binary->data));
 }
@@ -121,7 +121,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
   }
 
 #ifdef NIF_DEBUG
-  enif_fprintf(stdout, "----Parameters----\r\n");
+  printf("----Parameters----\r\n");
   nif_debug_print_parameter("base", &argv[0], &base_binary);
   nif_debug_print_parameter("exp", &argv[1], &exp_binary);
 #endif
@@ -129,10 +129,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
   // Make a local copy of the previously-initialized MPD context in order to
   // make this function thread safe.
   ctx = *((mpd_context_t*) enif_priv_data(env));
-
-#ifdef NIF_DEBUG
-  printf("\r\n----MPD Parameters----\r\n");
-#endif
 
   base = mpd_new(&ctx);
   if (ctx.newtrap) {
@@ -147,21 +143,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     return nif_make_error_tuple(env, &ctx);
   }
 
-#ifdef NIF_DEBUG
-  enif_fprintf("base      ", result_string);
-  mpd_fprint(stdout, base);
-  enif_fprintf(stdout, "\r");
-  
-  mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
-  if (strlen(status_string)) {
-    enif_fprintf(nif_debug_file, "  status  %s\r\n", status_string);
-  }
-
-  if (result_string != NULL) {
-    mpd_free(result_string);
-  }
-#endif
-
   exp = mpd_new(&ctx);
   if (ctx.newtrap) {
     mpd_del(base);
@@ -174,18 +155,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     mpd_del(exp);
     return nif_make_error_tuple(env, &ctx);
   }
-
-#ifdef NIF_DEBUG
-  mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
-  char* result_string = mpd_to_sci(exp, 1);
-  printf("exp (mpd): %s\r\n", result_string);
-  printf("  - status: %s\r\n", status_string);
-  mpd_free(result_string);
-#endif
-
-#ifdef NIF_DEBUG
-  printf("\r\n----Perfoming Power Operation----\r\n");
-#endif
 
   result = mpd_new(&ctx);
   if (ctx.newtrap) {
@@ -202,12 +171,6 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     return nif_make_error_tuple(env, &ctx);
   }
 
-#ifdef NIF_DEBUG
-  printf("result (mpd): %s\r\n", result_string);
-  mpd_snprint_flags(status_string, MPD_MAX_FLAG_STRING, ctx->status);
-  printf("  - status: %s\r\n", status_string);
-#endif
-  
   result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 0);
   
   mpd_del(result);
