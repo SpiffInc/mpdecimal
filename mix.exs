@@ -53,7 +53,8 @@ defmodule Mpdecimal.MixProject do
         "LICENSE*",
         "CHANGELOG*",
         "Makefile",
-        "c_lib",
+        "c_lib/mpdecimal-*.tar.gz",
+        "c_lib/Makefile",
         "c_src"
       ],
       name: "mpdecimal",
