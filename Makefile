@@ -9,6 +9,7 @@ PRIV_DIR = $(MIX_APP_PATH)/priv
 LIB_NAME = $(PRIV_DIR)/mpdecimal_nif.so
 
 C_SRC_DIR = c_src
+# TODO: Make targets dependent upon .h files as well.
 NIF_SRC=$(C_SRC_DIR)/*.c
 
 # Any tar.gz file that is located in C_LIB_DIR is assummed to be the mpdecimal
@@ -50,6 +51,7 @@ $(MPD_LIB_DIR):
 $(MPD_LIB): $(MPD_LIB_DIR)
 	$(MAKE) -C $(C_LIB_DIR)
 
+# TODO: Retarget clean to just the NIF library (not the underlying mpdecimal library).
 clean:
 	rm -f $(LIB_NAME)
 	$(MAKE) -C $(C_LIB_DIR) clean

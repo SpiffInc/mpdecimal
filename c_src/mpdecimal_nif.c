@@ -112,38 +112,29 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
   return enif_make_tuple2(env, enif_make_atom(env, "error"), signal_list_term);
 }
 
+#include "nif_param.h"
+
+// Ensure Thread Safety
+// Create a copy of the (previously-initialized) MPD context on the stack.
+// Hereafter, any function calls into the mpdecimal library interact with this
+// copy of the context, which is used only by the current thread.
+#define NIF_INIT_MPD_CONTEXT \
+  mpd_context_t ctx = *((mpd_context_t*) enif_priv_data(env));
+
+
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
   ERL_NIF_TERM result_term;
   char* result_string;
   mpd_ssize_t result_strlen;
 
-  ErlNifBinary base_binary;
-  ErlNifBinary exp_binary;
-  
-  mpd_context_t ctx;
   mpd_t* base;
   mpd_t* exp;
   mpd_t* result;
 
-  // Convert parameters into Erlang binaries.
-  if (argc != 2 ||
-  	  !enif_inspect_binary(env, argv[0], &base_binary) ||
-  	  !enif_inspect_binary(env, argv[1], &exp_binary)) {
-    return enif_make_badarg(env);
-  }
+  NIF_PROCESS_PARAM(2)
 
-#ifdef NIF_DEBUG
-  printf("----Parameters----\r\n");
-  nif_debug_print_parameter("base", &argv[0], &base_binary);
-  nif_debug_print_parameter("exp", &argv[1], &exp_binary);
-#endif
-
-  // Ensure Thread Safety
-  // Create a copy of the (previously-initialized) MPD context on the stack.
-  // Hereafter, any function calls into the mpdecimal library interact with
-  // this copy of the context, which is used only by the current thread.
-  ctx = *((mpd_context_t*) enif_priv_data(env));
+  NIF_INIT_MPD_CONTEXT
 
   base = mpd_new(&ctx);
   if (ctx.newtrap) {
@@ -152,7 +143,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
   
   // Expects the binary to contain a cstring, properly formatted with the null
   // terminator by Elixir code.
-  mpd_set_string(base, (char*) base_binary.data, &ctx);
+  mpd_set_string(base, (char*) a.data, &ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     return nif_make_error_tuple(env, &ctx);
@@ -166,7 +157,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 
   // Expects the binary to contain a cstring, properly formatted with the null
   // terminator by Elixir code.
-  mpd_set_string(exp, (char*) exp_binary.data, &ctx);
+  mpd_set_string(exp, (char*) b.data, &ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     mpd_del(exp);
