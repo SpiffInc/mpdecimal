@@ -31,13 +31,28 @@ static void mpd_custom_traphandler(mpd_context_t* ctx)
     (void) ctx;
 }
 
-int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info) {
+// TODO: It may be better to store this in priv_data.
+ErlNifResourceType* mpd_t_resource = NULL;
+
+static void mpd_t_dtor(ErlNifEnv* env, void* obj)
+{
+  (void) env;
+  mpd_del((mpd_t*) obj);
+} 
+
+int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
+{
   setup_mpd_mem_alloc();
 
   // The default trap handler raises SIGFPE. While the BEAM VM happens to
-  // ignore SIGFPE (as of OTP 21), it's a bit safer not to rely on this
+  // ignore SIGFPE (as of OTP 21), it's a bit cleaner not to rely on this
   // behavior and just not raise SIGFPE at all.
   mpd_traphandler = mpd_custom_traphandler;
+
+  mpd_t_resource = enif_open_resource_type(caller_env, NULL, "mpd_t", mpd_t_dtor, ERL_NIF_RT_CREATE, NULL);
+  if (mpd_t_resource == NULL) {
+    return 1;
+  }
 
   mpd_context_t* ctx = *priv_data = mpd_sh_alloc(sizeof(mpd_context_t), 1, 1);
 
@@ -53,12 +68,14 @@ int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info) {
   return 0;
 }
 
-int upgrade(ErlNifEnv* caller_env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info) {
+int upgrade(ErlNifEnv* caller_env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info)
+{
   *priv_data = *old_priv_data;
   return 0;
 }
 
-void unload(ErlNifEnv* caller_env, void* priv_data) {
+void unload(ErlNifEnv* caller_env, void* priv_data)
+{
   enif_free(priv_data);
   return;
 }
@@ -121,66 +138,117 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
 #define NIF_INIT_MPD_CONTEXT \
   mpd_context_t ctx = *((mpd_context_t*) enif_priv_data(env));
 
+#define MPD_CONTEXT_TRAP_CHECK \
+  if (ctx.newtrap) {                                                          \
+    return nif_make_error_tuple(env, &ctx);                                   \
+  }
+
+#define MPD_NEW(var)                                                          \
+  (var) = mpd_new(&ctx);                                                      \
+  MPD_CONTEXT_TRAP_CHECK
+
+// TODO: Immutable resuorces are used in keeping with the Erlang paradigm.
+// TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
+#define MPD_FUNCTION_2(function)                                              \
+  mpd_t* result = (mpd_t*) enif_alloc_resource(mpd_t_resource, sizeof(mpd_t));\
+  enif_release_resource((void*) result);                                      \
+  MPD_NEW(result)                                                             \
+  (mpd_##function)(result, a, b, &ctx);                                       \
+  MPD_CONTEXT_TRAP_CHECK
+
+// static ERL_NIF_TERM NIF_FUNCTION_NAME(name) (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+#define NIF_FUNCTION_NAME(function) mpdecimal_##function
+
+// TODO: Rename arg_count
+#define NIF_FUNCTION(function, arg_count)                                                            \
+static ERL_NIF_TERM NIF_FUNCTION_NAME(function)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) \
+{                                                                                                    \
+  NIF_PROCESS_PARAM(arg_count)                                                                       \
+  NIF_INIT_MPD_CONTEXT                                                                               \
+  MPD_FUNCTION_2(function)                                                                           \
+  return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_resource(env, result));          \
+}
+
+// TODO: Wrap macros in do-while blocks.
+
+NIF_FUNCTION(pow, 2)
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+  /*
   ERL_NIF_TERM result_term;
   char* result_string;
   mpd_ssize_t result_strlen;
+  */
 
-  mpd_t* base;
-  mpd_t* exp;
-  mpd_t* result;
+  // mpd_t* base;
+  // mpd_t* exp;
+  // mpd_t* result;
 
   NIF_PROCESS_PARAM(2)
 
   NIF_INIT_MPD_CONTEXT
 
+  /*
   base = mpd_new(&ctx);
   if (ctx.newtrap) {
     return nif_make_error_tuple(env, &ctx);
   }
+  */
   
   // Expects the binary to contain a cstring, properly formatted with the null
   // terminator by Elixir code.
+  /*
   mpd_set_string(base, (char*) a.data, &ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
+  /*
   exp = mpd_new(&ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
   // Expects the binary to contain a cstring, properly formatted with the null
   // terminator by Elixir code.
+  /*
   mpd_set_string(exp, (char*) b.data, &ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     mpd_del(exp);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
+  /*
   result = mpd_new(&ctx);
   if (ctx.newtrap) {
     mpd_del(base);
     mpd_del(exp);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
-  mpd_pow(result, base, exp, &ctx);
+  MPD_FUNCTION_2(pow)
+
+  /*
   mpd_del(base);
   mpd_del(exp);
   if (ctx.newtrap) {
     mpd_del(result);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
-  result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 1);
   
+  // result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 1);
+  
+  /*
   mpd_del(result);
 
   if (result_string == NULL) {
@@ -189,19 +257,23 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
     mpd_addstatus_raise(&ctx, MPD_Malloc_error);
     return nif_make_error_tuple(env, &ctx);
   }
+  */
 
   // Package the result string into an Erlang binary.
+  /*
   memcpy(enif_make_new_binary(env, result_strlen, &result_term),
          result_string,
          result_strlen);
   mpd_free(result_string);
+  */
 
-  return enif_make_tuple2(env, enif_make_atom(env, "ok"), result_term);
+  return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_resource(env, result));
 }
 
 static ErlNifFunc funcs[] = {
   // {name, arity, fptr}
-  {"power", 2, mpdecimal_power}
+  {"power", 2, mpdecimal_power},
+  {"pow", 2, mpdecimal_pow}
 };
 
 ERL_NIF_INIT(Elixir.MPDecimal.Nif, funcs, load, /* reload (deprecated) */ NULL, upgrade, unload)
