@@ -131,47 +131,59 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
 
 #include "nif_param.h"
 
+// TODO: Move this back into the function implementation?
 // Ensure Thread Safety
 // Create a copy of the (previously-initialized) MPD context on the stack.
 // Hereafter, any function calls into the mpdecimal library interact with this
 // copy of the context, which is used only by the current thread.
-#define NIF_INIT_MPD_CONTEXT \
-  mpd_context_t ctx = *((mpd_context_t*) enif_priv_data(env));
+static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
+{
+  return *((mpd_context_t*) enif_priv_data(env));  
+}
 
 #define MPD_CONTEXT_TRAP_CHECK \
   if (ctx.newtrap) {                                                          \
     return nif_make_error_tuple(env, &ctx);                                   \
   }
 
-#define MPD_NEW(var)                                                          \
-  (var) = mpd_new(&ctx);                                                      \
-  MPD_CONTEXT_TRAP_CHECK
-
 // TODO: Immutable resuorces are used in keeping with the Erlang paradigm.
 // TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
-#define MPD_FUNCTION_2(function)                                              \
-  mpd_t* result = (mpd_t*) enif_alloc_resource(mpd_t_resource, sizeof(mpd_t));\
-  enif_release_resource((void*) result);                                      \
-  MPD_NEW(result)                                                             \
-  (mpd_##function)(result, a, b, &ctx);                                       \
+// Out arguments are always created here, new.
+// Only the functions that work with Erlang data types are supported.
+#define MPD_NEW(result)                                                        \
+  mpd_t* result = (mpd_t*) enif_alloc_resource(mpd_t_resource, sizeof(mpd_t)); \
+  enif_release_resource((void*) result);                                       \
+  result = mpd_new(&ctx);                                                      \
+  MPD_CONTEXT_TRAP_CHECK
+
+#define MPD_FUNCTION_1IN_1OUT(function)                                        \
+  MPD_NEW(result)                                                              \
+  (mpd_##function)(result, a, &ctx);
+
+#define MPD_FUNCTION_2IN_1OUT(function)                                        \
+  MPD_NEW(result)                                                              \
+  (mpd_##function)(result, a, b, &ctx);
+
+#define MPD_FUNCTION(function, argc_in, argc_out)                              \
+  MPD_FUNCTION_##argc_in##IN_##argc_out##OUT(function)                         \
   MPD_CONTEXT_TRAP_CHECK
 
 // static ERL_NIF_TERM NIF_FUNCTION_NAME(name) (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 #define NIF_FUNCTION_NAME(function) mpdecimal_##function
 
 // TODO: Rename arg_count
-#define NIF_FUNCTION(function, arg_count)                                                            \
+#define NIF_FUNCTION(function, argc_in, argc_out)                                                    \
 static ERL_NIF_TERM NIF_FUNCTION_NAME(function)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) \
 {                                                                                                    \
-  NIF_PROCESS_PARAM(arg_count)                                                                       \
-  NIF_INIT_MPD_CONTEXT                                                                               \
-  MPD_FUNCTION_2(function)                                                                           \
+  NIF_PROCESS_PARAM(argc_in)                                                                         \
+  mpd_context_t ctx = nif_copy_context(env);                                                         \
+  MPD_FUNCTION(function, argc_in, argc_out)                                                          \
   return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_resource(env, result));          \
 }
 
 // TODO: Wrap macros in do-while blocks.
 
-NIF_FUNCTION(pow, 2)
+NIF_FUNCTION(pow, 2, 1)
 
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -187,7 +199,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 
   NIF_PROCESS_PARAM(2)
 
-  NIF_INIT_MPD_CONTEXT
+  mpd_context_t ctx = *((mpd_context_t*) enif_priv_data(env));
 
   /*
   base = mpd_new(&ctx);
@@ -234,7 +246,7 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
   }
   */
 
-  MPD_FUNCTION_2(pow)
+  MPD_FUNCTION_2IN_1OUT(pow)
 
   /*
   mpd_del(base);
