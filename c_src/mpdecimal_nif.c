@@ -39,6 +39,8 @@ static void dtor_mpd_t(ErlNifEnv* env, void* obj)
 
 int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
 {
+  printf("load started\r\n");
+
   setup_mpd_mem_alloc();
 
   // The default trap handler for the mpdecimal library raises SIGFPE. While
@@ -77,7 +79,9 @@ int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
   mpd_init(ctx, 28);
   ctx->round = MPD_ROUND_HALF_UP;
   ctx->traps = MPD_IEEE_Invalid_operation | MPD_Division_by_zero;
-  
+
+  printf("load succeeded\r\n");
+
   return 0;
 }
 

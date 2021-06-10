@@ -21,7 +21,7 @@ defmodule MPDecimal do
     base = Decimal.to_string(base, :xsd) <> "\0"
     exponent = Decimal.to_string(exponent, :xsd) <> "\0"
 
-    case Nif.power(base, exponent) do
+    case Nif.pow(base, exponent) do
       {:ok, result} -> Decimal.new(result)
       {:error, message} -> raise(MPDecimal.Error, message: message)
     end

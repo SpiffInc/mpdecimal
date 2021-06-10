@@ -1,3 +1,5 @@
+# TODO: Switch to gcc instead of Clang for the NIF library compilation.
+
 # TODO: Add support for just running the C preprocessor.
 CFLAGS ?= -g -O3
 CFLAGS += -Wall
@@ -41,7 +43,7 @@ calling_from_make:
 all: $(PRIV_DIR) $(LIB_NAME) $(MPD_LIB)
 
 $(LIB_NAME): $(NIF_SRC) $(MPD_LIB)
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) $^ -o $@ $(MPD_LIB)
+	$(CC) $(CFLAGS) -shared $(LDFLAGS) $(NIF_SRC) -o $@ $(MPD_LIB)
 
 $(PRIV_DIR):
 	mkdir -p $@
