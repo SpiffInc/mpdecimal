@@ -13,6 +13,7 @@ LIB_NAME = $(PRIV_DIR)/mpdecimal_nif.so
 
 C_SRC_DIR = c_src
 # TODO: Make targets dependent upon .h files as well.
+# This is broken.
 NIF_SRC=$(C_SRC_DIR)/*.c
 
 # Any tar.gz file that is located in C_LIB_DIR is assummed to be the mpdecimal
@@ -42,6 +43,7 @@ calling_from_make:
 
 all: $(PRIV_DIR) $(LIB_NAME) $(MPD_LIB)
 
+# TODO: This is broken?
 $(LIB_NAME): $(NIF_SRC) $(MPD_LIB)
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) $(NIF_SRC) -o $@ $(MPD_LIB)
 

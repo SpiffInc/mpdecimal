@@ -6,7 +6,7 @@
 #define NIF_FUNCTION_HEADER(function) \
 ERL_NIF_TERM NIF_FUNCTION_NAME(function)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
-#define NIF_FUNCTION_DECLARE(function, argc_in, argc_out, retc) \
+#define NIF_FUNCTION_DECLARE(function, argc_in, argc_out) \
   NIF_FUNCTION_HEADER(function);
 
 #define MPDECIMAL_FUNCTION NIF_FUNCTION_DECLARE

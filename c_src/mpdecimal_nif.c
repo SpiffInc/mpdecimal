@@ -10,6 +10,7 @@
 #include "mpdecimal.h"
 #include "nif_common.h"
 #include "nif_function.h"
+#include "nif_function_register.h"
 
 // Configure the mpdecimal library to use the memory allocator provided by the
 // BEAM VM.
@@ -39,8 +40,6 @@ static void dtor_mpd_t(ErlNifEnv* env, void* obj)
 
 int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
 {
-  printf("load started\r\n");
-
   setup_mpd_mem_alloc();
 
   // The default trap handler for the mpdecimal library raises SIGFPE. While
@@ -80,8 +79,6 @@ int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
   ctx->round = MPD_ROUND_HALF_UP;
   ctx->traps = MPD_IEEE_Invalid_operation | MPD_Division_by_zero;
 
-  printf("load succeeded\r\n");
-
   return 0;
 }
 
@@ -96,88 +93,6 @@ void unload(ErlNifEnv* caller_env, void* priv_data)
   enif_free(priv_data);
   return;
 }
-
-/*
-static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
-  ERL_NIF_TERM result_term;
-  char* result_string;
-  mpd_ssize_t result_strlen;
-
-  // mpd_t* base;
-  // mpd_t* exp;
-  // mpd_t* result;
-
-  NIF_GET_RESOURCE(2)
-
-  mpd_context_t ctx = *((mpd_context_t*) enif_priv_data(env));
-
-  base = mpd_new(&ctx);
-  if (ctx.newtrap) {
-    return nif_make_error_tuple(env, &ctx);
-  }
-  
-  // Expects the binary to contain a cstring, properly formatted with the null
-  // terminator by Elixir code.
-  mpd_set_string(base, (char*) a.data, &ctx);
-  if (ctx.newtrap) {
-    mpd_del(base);
-    return nif_make_error_tuple(env, &ctx);
-  }
-
-  exp = mpd_new(&ctx);
-  if (ctx.newtrap) {
-    mpd_del(base);
-    return nif_make_error_tuple(env, &ctx);
-  }
-
-  // Expects the binary to contain a cstring, properly formatted with the null
-  // terminator by Elixir code.
-  mpd_set_string(exp, (char*) b.data, &ctx);
-  if (ctx.newtrap) {
-    mpd_del(base);
-    mpd_del(exp);
-    return nif_make_error_tuple(env, &ctx);
-  }
-
-  result = mpd_new(&ctx);
-  if (ctx.newtrap) {
-    mpd_del(base);
-    mpd_del(exp);
-    return nif_make_error_tuple(env, &ctx);
-  }
-
-  MPD_FUNCTION_2IN_1OUT_0RET(pow)
-
-  mpd_del(base);
-  mpd_del(exp);
-  if (ctx.newtrap) {
-    mpd_del(result);
-    return nif_make_error_tuple(env, &ctx);
-  }
-  
-  // result_strlen = mpd_to_sci_size(&result_string, result, 1); // fmt
-  
-  mpd_del(result);
-
-  if (result_string == NULL) {
-    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
-    // sensitive.
-    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
-    return nif_make_error_tuple(env, &ctx);
-  }
-
-  // Package the result string into an Erlang binary.
-  memcpy(enif_make_new_binary(env, result_strlen, &result_term),
-         result_string,
-         result_strlen);
-  mpd_free(result_string);
-
-  return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_resource(env, result));
-}
-*/
-
-#include "nif_function_register.h"
 
 ERL_NIF_INIT(Elixir.MPDecimal.Nif, funcs, load, /* reload (deprecated) */ NULL, upgrade, unload)
 

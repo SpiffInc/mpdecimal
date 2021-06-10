@@ -3,9 +3,9 @@
 
 #include "nif_function.h"
 
-#define ERL_FUNCTION_NAME(function) "##function##"
+#define ERL_FUNCTION_NAME(function) #function
 
-#define NIF_FUNCTION_REGISTER(function, argc_in, argc_out, retc) \
+#define NIF_FUNCTION_REGISTER(function, argc_in, argc_out) \
   {ERL_FUNCTION_NAME(function), argc_in, NIF_FUNCTION_NAME(function)},
 
 ErlNifFunc funcs[] = {

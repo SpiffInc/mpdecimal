@@ -11,7 +11,8 @@
 #include "nif_common.h"
 #include "nif_function.h"
 
-// TODO: Get resources from function parameters.
+// TODO: Documentation
+// i.e. Get resources from function parameters.
 #define NIF_GET_RESOURCE_0IN                                                  \
   if (argc != 0) {                                                            \
     return enif_make_badarg(env);                                             \
@@ -46,38 +47,39 @@
 // Only the functions that work with Erlang data types are supported.
 #define MPD_NEW(result)                                                                                     \
   mpd_t* result = enif_alloc_resource(((priv_data_t*) enif_priv_data(env))->resource_mpd_t, sizeof(mpd_t)); \
+  ERL_NIF_TERM result_term = enif_make_resource(env, result);                                               \
   enif_release_resource((void*) result);                                                                    \
   result = mpd_new(&ctx);                                                                                   \
   MPD_CONTEXT_TRAP_CHECK
 
-#define MPD_FUNCTION_0IN_0OUT_1RET(function)                                  \
-  MPD_NEW(result)                                                             \
-  result = (mpd_##function)(&ctx);
 
-#define MPD_FUNCTION_1IN_1OUT_0RET(function)                                  \
+// 0IN_1OUT is an alias for mpd_new()
+#define MPD_FUNCTION_0IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
-  (mpd_##function)(result, a, &ctx);
 
-#define MPD_FUNCTION_2IN_1OUT_0RET(function)                                  \
+#define MPD_FUNCTION_1IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
-  (mpd_##function)(result, a, b, &ctx);
+  (void) (mpd_##function)(result, a, &ctx);
 
-#define MPD_FUNCTION(function, argc_in, argc_out, retc)                       \
-  MPD_FUNCTION_##argc_in##IN_##argc_out##OUT_##retc##RET(function)            \
+#define MPD_FUNCTION_2IN_1OUT(function)                                       \
+  MPD_NEW(result)                                                             \
+  printf("About to call mpd function.\r\n"); \
+  (void) (mpd_##function)(result, a, b, &ctx);
+
+#define MPD_FUNCTION(function, argc_in, argc_out)                             \
+  MPD_FUNCTION_##argc_in##IN_##argc_out##OUT(function)                        \
   MPD_CONTEXT_TRAP_CHECK
 
-#define NIF_FUNCTION_DEFINE(function, argc_in, argc_out, retc)                \
+#define NIF_FUNCTION_DEFINE(function, argc_in, argc_out)                      \
 NIF_FUNCTION_HEADER(function)                                                 \
 {                                                                             \
   NIF_GET_RESOURCE(argc_in)                                                   \
   mpd_context_t ctx = nif_copy_context(env);                                  \
-  MPD_FUNCTION(function, argc_in, argc_out, retc)                             \
+  MPD_FUNCTION(function, argc_in, argc_out)                                   \
   return enif_make_tuple2(env,                                                \
                           enif_make_atom(env, "ok"),                          \
-                          enif_make_resource(env, result));                   \
+                          result_term);                                       \
 }
-
-// TODO: priv_data initialization
 
 static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
 {
@@ -105,9 +107,10 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
 // copy of the context, which is used only by the current thread.
 static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
 {
-  return *((mpd_context_t*) enif_priv_data(env));  
+  return *(((priv_data_t*) enif_priv_data(env))->ctx);
 }
 
+// TODO: Implement nif_get_resource_mpd_t?
 
 #define MPDECIMAL_FUNCTION NIF_FUNCTION_DEFINE
 #include "mpdecimal_function.h"
