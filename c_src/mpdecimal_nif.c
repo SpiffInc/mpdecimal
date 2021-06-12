@@ -34,8 +34,10 @@ static void mpd_custom_traphandler(mpd_context_t* ctx)
 // Destructor for the "mpd_t" resource type.
 static void dtor_mpd_t(ErlNifEnv* env, void* obj)
 {
+  // TODO: Remove this debugging statement.
+  printf("dtor %p\r\n", obj);
   (void) env;
-  mpd_del((mpd_t*) obj);
+  mpd_del(*((mpd_t**) obj));
 } 
 
 int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)

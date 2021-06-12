@@ -12,6 +12,7 @@ ErlNifFunc funcs[] = {
   // {name, arity, fptr}
 #define MPDECIMAL_FUNCTION NIF_FUNCTION_REGISTER
 #include "mpdecimal_function.h"
+#include "mpdecimal_function_custom.h"
 #undef MPDECIMAL_FUNCTION
 };
 

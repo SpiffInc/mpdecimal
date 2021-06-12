@@ -19,18 +19,29 @@
   }
 
 #define NIF_GET_RESOURCE_1IN                                                                                 \
-  const mpd_t* a;                                                                                            \
+  const mpd_t** a;                                                                                           \
   if ((argc != 1) ||                                                                                         \
       !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a)) { \
     return enif_make_badarg(env);                                                                            \
   }
 
 #define NIF_GET_RESOURCE_2IN                                                                                 \
-  const mpd_t* a;                                                                                            \
-  const mpd_t* b;                                                                                            \
+  const mpd_t** a;                                                                                           \
+  const mpd_t** b;                                                                                           \
   if ((argc != 2) ||                                                                                         \
       !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a) || \
       !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &b)) { \
+    return enif_make_badarg(env);                                                                            \
+  }
+
+#define NIF_GET_RESOURCE_3IN                                                                                 \
+  const mpd_t** a;                                                                                           \
+  const mpd_t** b;                                                                                           \
+  const mpd_t** c;                                                                                           \
+  if ((argc != 3) ||                                                                                         \
+      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a) || \
+      !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &b) || \
+      !enif_get_resource(env, argv[2], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &c)) { \
     return enif_make_badarg(env);                                                                            \
   }
 
@@ -45,26 +56,41 @@
 // TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
 // Out arguments are always created here, new.
 // Only the functions that work with Erlang data types are supported.
-#define MPD_NEW(result)                                                                                     \
-  mpd_t* result = enif_alloc_resource(((priv_data_t*) enif_priv_data(env))->resource_mpd_t, sizeof(mpd_t)); \
-  ERL_NIF_TERM result_term = enif_make_resource(env, result);                                               \
-  enif_release_resource((void*) result);                                                                    \
-  result = mpd_new(&ctx);                                                                                   \
+#define MPD_NEW(result)                                                                                        \
+  mpd_t** result = enif_alloc_resource(((priv_data_t*) enif_priv_data(env))->resource_mpd_t, sizeof(mpd_t**)); \
+  *result = mpd_new(&ctx);                                                                                     \
+  ERL_NIF_TERM result##_term = enif_make_resource(env, result);                                                \
+  enif_release_resource(result);                                                                               \
   MPD_CONTEXT_TRAP_CHECK
 
+// TODO: Call mpd_finalize()?
 
+// TODO: This may not be needed at all.
 // 0IN_1OUT is an alias for mpd_new()
 #define MPD_FUNCTION_0IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
+  return result_term;
 
 #define MPD_FUNCTION_1IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
-  (void) (mpd_##function)(result, a, &ctx);
+  (void) (mpd_##function)(*result, *a, &ctx);                                 \
+  return result_term;
 
 #define MPD_FUNCTION_2IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
-  printf("About to call mpd function.\r\n"); \
-  (void) (mpd_##function)(result, a, b, &ctx);
+  (void) (mpd_##function)(*result, *a, *b, &ctx);                             \
+  return result_term;
+
+#define MPD_FUNCTION_2IN_2OUT(function)                                       \
+  MPD_NEW(q)                                                                  \
+  MPD_NEW(r)                                                                  \
+  (void) (mpd_##function)(*q, *r, *a, *b, &ctx);                              \
+  return enif_make_tuple2(env, q_term, r_term);
+
+#define MPD_FUNCTION_3IN_1OUT(function)                                       \
+  MPD_NEW(result)                                                             \
+  (void) (mpd_##function)(*result, *a, *b, *c, &ctx);                         \
+  return result_term;
 
 #define MPD_FUNCTION(function, argc_in, argc_out)                             \
   MPD_FUNCTION_##argc_in##IN_##argc_out##OUT(function)                        \
@@ -76,9 +102,6 @@ NIF_FUNCTION_HEADER(function)                                                 \
   NIF_GET_RESOURCE(argc_in)                                                   \
   mpd_context_t ctx = nif_copy_context(env);                                  \
   MPD_FUNCTION(function, argc_in, argc_out)                                   \
-  return enif_make_tuple2(env,                                                \
-                          enif_make_atom(env, "ok"),                          \
-                          result_term);                                       \
 }
 
 static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
@@ -115,4 +138,49 @@ static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
 #define MPDECIMAL_FUNCTION NIF_FUNCTION_DEFINE
 #include "mpdecimal_function.h"
 #undef MPDECIMAL_FUNCTION
+
+NIF_FUNCTION_HEADER(set_string)
+{
+  ErlNifBinary s_binary;
+
+  if ((argc != 1) ||
+      !enif_inspect_binary(env, argv[0], &s_binary)) {
+    return enif_make_badarg(env);
+  }
+
+  mpd_context_t ctx = nif_copy_context(env);
+  MPD_NEW(result)
+
+  mpd_set_string(*result, (char*) s_binary.data, &ctx);
+  MPD_CONTEXT_TRAP_CHECK
+ 
+  return result_term; 
+}
+
+NIF_FUNCTION_HEADER(to_string)
+{
+  NIF_GET_RESOURCE_1IN
+
+  mpd_context_t ctx = nif_copy_context(env);
+
+  char* res;
+  mpd_ssize_t res_strlen;
+  res_strlen = mpd_to_sci_size(&res, *a, /* fmt */ 1);
+
+  if (res == NULL) {
+    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
+    // sensitive.
+    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  // Package the string into an Erlang binary.
+  ERL_NIF_TERM res_term;
+  memcpy(enif_make_new_binary(env, res_strlen, &res_term),
+         res,
+         res_strlen);
+  mpd_free(res);
+
+  return res_term;
+}
 

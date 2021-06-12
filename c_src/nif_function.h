@@ -11,6 +11,7 @@ ERL_NIF_TERM NIF_FUNCTION_NAME(function)(ErlNifEnv* env, int argc, const ERL_NIF
 
 #define MPDECIMAL_FUNCTION NIF_FUNCTION_DECLARE
 #include "mpdecimal_function.h"
+#include "mpdecimal_function_custom.h"
 #undef MPDECIMAL_FUNCTION
 
 #endif
