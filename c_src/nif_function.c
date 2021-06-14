@@ -135,9 +135,9 @@ static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
 
 // TODO: Implement nif_get_resource_mpd_t?
 
-#define MPDECIMAL_FUNCTION NIF_FUNCTION_DEFINE
-#include "mpdecimal_function.h"
-#undef MPDECIMAL_FUNCTION
+#define NIF_FUNCTION NIF_FUNCTION_DEFINE
+#include "nif_interface.h"
+#undef NIF_FUNCTION 
 
 NIF_FUNCTION_HEADER(set_string)
 {

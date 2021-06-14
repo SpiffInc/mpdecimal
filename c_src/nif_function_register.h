@@ -10,10 +10,10 @@
 
 ErlNifFunc funcs[] = {
   // {name, arity, fptr}
-#define MPDECIMAL_FUNCTION NIF_FUNCTION_REGISTER
-#include "mpdecimal_function.h"
-#include "mpdecimal_function_custom.h"
-#undef MPDECIMAL_FUNCTION
+#define NIF_FUNCTION NIF_FUNCTION_REGISTER
+#include "nif_interface.h"
+#include "nif_interface_custom.h"
+#undef NIF_FUNCTION
 };
 
 #endif

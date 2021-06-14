@@ -25,6 +25,10 @@ defmodule MPDecimal.Nif do
     set_string(b <> "\0")
   end
 
+  # def new(num) when is_integer(num) do
+    
+  # end
+
   # MPDecimal library functions with common wrapper logic.
   # (i.e.) always allocate a new result variable to make it fit the functional paradigm.
   def abs(_a), do: raise "abs/1 not implemented"
@@ -63,8 +67,7 @@ defmodule MPDecimal.Nif do
   def next_minus(_a), do: raise "next_minus/1 not implemented"
   def next_plus(_a), do: raise "next_plus/1 not implemented"
   def next_toward(_a, _b), do: raise "next_toward/2 not implemented"
-  # def new(), do: raise "new/0 not implemented"
-
+  
   # or is a reserved word in Elixir
   # def or(_a, _b), do: raise "or/2 not implemented"
   
