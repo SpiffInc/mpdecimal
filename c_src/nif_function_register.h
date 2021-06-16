@@ -3,7 +3,9 @@
 
 #include "nif_function.h"
 
-#define ERL_FUNCTION_NAME(function) #function
+#define STRING(function) #function
+
+#define ERL_FUNCTION_NAME(function) STRING(_##function)
 
 #define NIF_FUNCTION_REGISTER(function, argc_in, argc_out) \
   {ERL_FUNCTION_NAME(function), argc_in, NIF_FUNCTION_NAME(function)},

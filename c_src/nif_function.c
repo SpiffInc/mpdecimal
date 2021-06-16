@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,7 +53,7 @@
     return nif_make_error_tuple(env, &ctx);                                   \
   }
 
-// TODO: Immutable resuorces are used in keeping with the Erlang paradigm.
+// TODO: Immutable resourrces are used in keeping with the Erlang paradigm.
 // TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
 // Out arguments are always created here, new.
 // Only the functions that work with Erlang data types are supported.
@@ -74,27 +75,30 @@
 #define MPD_FUNCTION_1IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
   (void) (mpd_##function)(*result, *a, &ctx);                                 \
+  MPD_CONTEXT_TRAP_CHECK                                                      \
   return result_term;
 
 #define MPD_FUNCTION_2IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
   (void) (mpd_##function)(*result, *a, *b, &ctx);                             \
+  MPD_CONTEXT_TRAP_CHECK                                                      \
   return result_term;
 
 #define MPD_FUNCTION_2IN_2OUT(function)                                       \
   MPD_NEW(q)                                                                  \
   MPD_NEW(r)                                                                  \
   (void) (mpd_##function)(*q, *r, *a, *b, &ctx);                              \
+  MPD_CONTEXT_TRAP_CHECK                                                      \
   return enif_make_tuple2(env, q_term, r_term);
 
 #define MPD_FUNCTION_3IN_1OUT(function)                                       \
   MPD_NEW(result)                                                             \
   (void) (mpd_##function)(*result, *a, *b, *c, &ctx);                         \
+  MPD_CONTEXT_TRAP_CHECK                                                      \
   return result_term;
 
 #define MPD_FUNCTION(function, argc_in, argc_out)                             \
-  MPD_FUNCTION_##argc_in##IN_##argc_out##OUT(function)                        \
-  MPD_CONTEXT_TRAP_CHECK
+  MPD_FUNCTION_##argc_in##IN_##argc_out##OUT(function)
 
 #define NIF_FUNCTION_DEFINE(function, argc_in, argc_out)                      \
 NIF_FUNCTION_HEADER(function)                                                 \
@@ -102,6 +106,12 @@ NIF_FUNCTION_HEADER(function)                                                 \
   NIF_GET_RESOURCE(argc_in)                                                   \
   mpd_context_t ctx = nif_copy_context(env);                                  \
   MPD_FUNCTION(function, argc_in, argc_out)                                   \
+}
+
+static ERL_NIF_TERM nif_make_boolean(ErlNifEnv* env, bool b)
+{
+  return b ? enif_make_atom(env, "true")
+           : enif_make_atom(env, "false");
 }
 
 static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
@@ -139,6 +149,76 @@ static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
 #include "nif_interface.h"
 #undef NIF_FUNCTION 
 
+NIF_FUNCTION_HEADER(cmp)
+{
+  NIF_GET_RESOURCE(2)
+  mpd_context_t ctx = nif_copy_context(env);
+
+  int result = mpd_cmp(*a, *b, &ctx);
+  MPD_CONTEXT_TRAP_CHECK
+
+  return enif_make_int(env, result);
+}
+
+NIF_FUNCTION_HEADER(is_mpdecimal)
+{
+  if (argc != 1) {
+    return enif_make_badarg(env);
+  }
+
+  const mpd_t** a;
+  bool result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a);
+
+  return nif_make_boolean(env, result);
+}
+
+NIF_FUNCTION_HEADER(isnan)
+{
+  NIF_GET_RESOURCE_1IN
+  bool result = mpd_isnan(*a);
+
+  return nif_make_boolean(env, result);
+}
+
+NIF_FUNCTION_HEADER(ispositive)
+{
+  NIF_GET_RESOURCE_1IN
+  bool result = (mpd_ispositive(*a) != 0);
+  return nif_make_boolean(env, result);
+}
+
+NIF_FUNCTION_HEADER(isinfinite)
+{
+  NIF_GET_RESOURCE_1IN
+  bool result = (mpd_isinfinite(*a) != 0);
+  return nif_make_boolean(env, result);
+}
+
+NIF_FUNCTION_HEADER(isinteger)
+{
+  NIF_GET_RESOURCE_1IN
+  bool result = (mpd_isinteger(*a) != 0);
+  return nif_make_boolean(env, result);
+}
+
+NIF_FUNCTION_HEADER(set_i64)
+{
+  ErlNifSInt64 integer;
+
+  if ((argc != 1) ||
+      !enif_get_int64(env, argv[0], &integer)) {
+    return enif_make_badarg(env);
+  }
+
+  mpd_context_t ctx = nif_copy_context(env);
+  MPD_NEW(result)
+
+  mpd_set_i64(*result, integer, &ctx);
+  MPD_CONTEXT_TRAP_CHECK
+
+  return result_term;
+}
+
 NIF_FUNCTION_HEADER(set_string)
 {
   ErlNifBinary s_binary;
@@ -157,7 +237,7 @@ NIF_FUNCTION_HEADER(set_string)
   return result_term; 
 }
 
-NIF_FUNCTION_HEADER(to_string)
+NIF_FUNCTION_HEADER(to_sci)
 {
   NIF_GET_RESOURCE_1IN
 
@@ -165,7 +245,34 @@ NIF_FUNCTION_HEADER(to_string)
 
   char* res;
   mpd_ssize_t res_strlen;
-  res_strlen = mpd_to_sci_size(&res, *a, /* fmt */ 1);
+  res_strlen = mpd_to_sci_size(&res, *a, /* fmt */ 0);
+
+  if (res == NULL) {
+    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
+    // sensitive.
+    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  // Package the string into an Erlang binary.
+  ERL_NIF_TERM res_term;
+  memcpy(enif_make_new_binary(env, res_strlen, &res_term),
+         res,
+         res_strlen);
+  mpd_free(res);
+
+  return res_term;
+}
+
+NIF_FUNCTION_HEADER(to_eng)
+{
+  NIF_GET_RESOURCE_1IN
+
+  mpd_context_t ctx = nif_copy_context(env);
+
+  char* res;
+  mpd_ssize_t res_strlen;
+  res_strlen = mpd_to_eng_size(&res, *a, /* fmt */ 0);
 
   if (res == NULL) {
     // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
