@@ -46,7 +46,6 @@ defmodule MPDecimal do
 
   # TODO
   # def cast
-  # Need to be able to work with floating-point numbers.
 
   def compare(a, b) when is_reference(a) and is_reference(b) do
     result = Nif._cmp(a, b)

@@ -32,6 +32,8 @@ defmodule MPDecimal.Nif do
   def _cmp(_a, _b), do: raise "_cmp/2 not implemented"
   def _compare(_a, _b), do: raise "_compare/2 not implemented"
   def _compare_signal(_a, _b), do: raise "_compare_signal/2 not implemented"
+  def _compare_total(_a, _b), do: raise "_compare_total/2 not implemented"
+  def _compare_total_mag(_a, _b), do: raise "_compare_total_mag/2 not implemented"
   def _copy(_a), do: raise "_copy/1 not implemented"
   def _copy_abs(_a), do: raise "_copy_abs/1 not implemented"
   def _copy_negate(_a), do: raise "_copy_negate/1 not implemented"
@@ -83,5 +85,7 @@ defmodule MPDecimal.Nif do
   def _to_eng(_a), do: raise "_to_sci/1 not implemented"
   def _to_sci(_a), do: raise "_to_eng/1 not implemented"
 
+  # TODO: Is this actually needed?
+  # Not an mpdecimal library function.
   def _is_mpdecimal(_a), do: raise "_is_mpdecimal/1 not implemented"
 end
