@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -108,10 +107,10 @@ NIF_FUNCTION_HEADER(function)                                                 \
   MPD_FUNCTION(function, argc_in, argc_out)                                   \
 }
 
-static ERL_NIF_TERM nif_make_boolean(ErlNifEnv* env, bool b)
+static ERL_NIF_TERM enif_make_boolean(ErlNifEnv* env, int i)
 {
-  return b ? enif_make_atom(env, "true")
-           : enif_make_atom(env, "false");
+  return (i != 0) ? enif_make_atom(env, "true")
+                  : enif_make_atom(env, "false");
 }
 
 static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
@@ -167,38 +166,38 @@ NIF_FUNCTION_HEADER(is_mpdecimal)
   }
 
   const mpd_t** a;
-  bool result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a);
+  int result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a);
 
-  return nif_make_boolean(env, result);
+  return enif_make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isnan)
 {
   NIF_GET_RESOURCE_1IN
-  bool result = mpd_isnan(*a);
+  int result = mpd_isnan(*a);
 
-  return nif_make_boolean(env, result);
+  return enif_make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(ispositive)
 {
   NIF_GET_RESOURCE_1IN
-  bool result = (mpd_ispositive(*a) != 0);
-  return nif_make_boolean(env, result);
+  int result = mpd_ispositive(*a);
+  return enif_make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isinfinite)
 {
   NIF_GET_RESOURCE_1IN
-  bool result = (mpd_isinfinite(*a) != 0);
-  return nif_make_boolean(env, result);
+  int result = mpd_isinfinite(*a);
+  return enif_make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isinteger)
 {
   NIF_GET_RESOURCE_1IN
-  bool result = (mpd_isinteger(*a) != 0);
-  return nif_make_boolean(env, result);
+  int result = mpd_isinteger(*a);
+  return enif_make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(set_i64)
