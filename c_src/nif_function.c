@@ -18,31 +18,31 @@
     return enif_make_badarg(env);                                             \
   }
 
-#define NIF_GET_RESOURCE_1IN                                                                                 \
-  const mpd_t** a;                                                                                           \
-  if ((argc != 1) ||                                                                                         \
-      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a)) { \
-    return enif_make_badarg(env);                                                                            \
+#define NIF_GET_RESOURCE_1IN                                                                                    \
+  const mpd_t** a;                                                                                              \
+  if ((argc != 1) ||                                                                                            \
+      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &a)) { \
+    return enif_make_badarg(env);                                                                               \
   }
 
-#define NIF_GET_RESOURCE_2IN                                                                                 \
-  const mpd_t** a;                                                                                           \
-  const mpd_t** b;                                                                                           \
-  if ((argc != 2) ||                                                                                         \
-      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a) || \
-      !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &b)) { \
-    return enif_make_badarg(env);                                                                            \
+#define NIF_GET_RESOURCE_2IN                                                                                    \
+  const mpd_t** a;                                                                                              \
+  const mpd_t** b;                                                                                              \
+  if ((argc != 2) ||                                                                                            \
+      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &a) || \
+      !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &b)) { \
+    return enif_make_badarg(env);                                                                               \
   }
 
-#define NIF_GET_RESOURCE_3IN                                                                                 \
-  const mpd_t** a;                                                                                           \
-  const mpd_t** b;                                                                                           \
-  const mpd_t** c;                                                                                           \
-  if ((argc != 3) ||                                                                                         \
-      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a) || \
-      !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &b) || \
-      !enif_get_resource(env, argv[2], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &c)) { \
-    return enif_make_badarg(env);                                                                            \
+#define NIF_GET_RESOURCE_3IN                                                                                    \
+  const mpd_t** a;                                                                                              \
+  const mpd_t** b;                                                                                              \
+  const mpd_t** c;                                                                                              \
+  if ((argc != 3) ||                                                                                            \
+      !enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &a) || \
+      !enif_get_resource(env, argv[1], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &b) || \
+      !enif_get_resource(env, argv[2], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &c)) { \
+    return enif_make_badarg(env);                                                                               \
   }
 
 #define NIF_GET_RESOURCE(argc_in) NIF_GET_RESOURCE_##argc_in##IN
@@ -56,11 +56,11 @@
 // TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
 // Out arguments are always created here, new.
 // Only the functions that work with Erlang data types are supported.
-#define MPD_NEW(result)                                                                                        \
-  mpd_t** result = enif_alloc_resource(((priv_data_t*) enif_priv_data(env))->resource_mpd_t, sizeof(mpd_t**)); \
-  *result = mpd_new(&ctx);                                                                                     \
-  ERL_NIF_TERM result##_term = enif_make_resource(env, result);                                                \
-  enif_release_resource(result);                                                                               \
+#define MPD_NEW(result)                                                                                           \
+  mpd_t** result = enif_alloc_resource(((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, sizeof(mpd_t**)); \
+  *result = mpd_new(&ctx);                                                                                        \
+  ERL_NIF_TERM result##_term = enif_make_resource(env, result);                                                   \
+  enif_release_resource(result);                                                                                  \
   MPD_CONTEXT_TRAP_CHECK
 
 // TODO: Call mpd_finalize()?
@@ -142,7 +142,7 @@ static inline mpd_context_t nif_copy_context(ErlNifEnv* env)
   return *(((priv_data_t*) enif_priv_data(env))->ctx);
 }
 
-// TODO: Implement nif_get_resource_mpd_t?
+// TODO: Implement nif_get_resource_mpd_t_pp?
 
 #define NIF_FUNCTION NIF_FUNCTION_DEFINE
 #include "nif_interface.h"
@@ -166,7 +166,7 @@ NIF_FUNCTION_HEADER(is_mpdecimal)
   }
 
   const mpd_t** a;
-  int result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &a);
+  int result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &a);
 
   return enif_make_boolean(env, result);
 }

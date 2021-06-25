@@ -43,10 +43,8 @@ mpd_isdynamic_data      // Not Exported (Memory Model)
 
 #define NIF_TYPE_C_RET_INT int
 
-#define NIF_TYPE_C_ARG_CONST_MPD_T_P const mpd_t**
-
 #define NIF_GET_ERL_IN_RESOURCE_MPD_T(argn, arg_var) \
-  enif_get_resource(env, argv[argn], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t, (void**) &arg_var)
+  enif_get_resource(env, argv[argn], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &arg_var)
 
 #define NIF_GET_ARG(argn, arg_var, arg_ERL_type) \
   NIF_GET_##arg_ERL_type(argn, arg_var)
@@ -60,24 +58,109 @@ mpd_isdynamic_data      // Not Exported (Memory Model)
   }
 
 #define MPD_FUNCTION_1RET_1ARG(function, ret_var, arg_var) \
-  ret_var = (function)(arg_var);
+  ret_var = function(arg_var);
 
 #define MPD_NIF_RETURN__C_RET_INT__ERL_OUT_BOOLEAN(ret_var) \
   return enif_make_boolean(env, ret_var);
 
 #define MPD_NIF_RETURN(ret_var, ret_C_type, ret_ERL_type) \
   MPD_NIF_RETURN__##ret_C_type##__##ret_ERL_type(ret_var)
-
+/*
 #define MPD_NIF_DEFINE(function, ret_var, ret_C_type, ret_ERL_type, arg0_var, arg0_C_type, arg0_ERL_type) \
   MPD_NIF_HEADER_1RET_1ARG(ret_var, ret_C_type, arg0_var, arg0_C_type, arg0_ERL_type)                     \
   MPD_FUNCTION_1RET_1ARG(function, ret_var, arg0_var)                                                     \
-  MPD_NIF_RETURN(ret_var, ret_C_type, ret_ERL_type)
+  MPD_NIF_RETURN(ret_var, ret_C_type, ret_ERL_type)                                                       \
+*/
+
+#define MPD_NIF_DECLARE_VAR__C_CHAR_P(var) \
+  char* var;
+
+#define MPD_NIF_DECLARE_VAR__C_CONST_CHAR_P(var) \
+  const char* var;
+
+#define MPD_NIF_DECLARE_VAR__C_INT(var) \
+  int var;
+
+#define MPD_NIF_DECLARE_VAR__C_LONG(var) \
+  long var;
+
+#define MPD_NIF_DECLARE_VAR__C_SIZE_T(var) \
+  size_t var;
+
+#define MPD_NIF_DECLARE_VAR__C_MPD_SSIZE_T(var) \
+  mpd_ssize_t var;
+
+#define MPD_NIF_DECLARE_VAR__C_MPD_UINT_T(var) \
+  mpd_uint_t var;
+
+#define MPD_NIF_DECLARE_VAR__C_CONST_MPD_T_P(var) \
+  const mpd_t* var;
+
+#define MPD_NIF_DECLARE_VAR__C_UINT8_T(var) \
+  uint8_t var;
+
+#define MPD_NIF_DECLARE_VAR__C_UINT32_T(var) \
+  uint32_t var;
+
+#define MPD_NIF_DECLARE_VAR__C_VOID(var)
+
+#define MPD_NIF_DECLARE_VAR(var, c_type) \
+  MPD_NIF_DECLARE_VAR__##c_type(var)
+
+#define ENIF_GET_RESOURCE_MPD_T(argn, var, var_erl_dir) \
+  enif_get_resource(env, argv[argn], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &var)
+
+#define ENIF_GET_ERL_RESOURCE_MPD_T ENIF_GET_RESOURCE_MPD_T
+
+#define ENIF_GET(argn, var, var_erl_dir, var_erl_type) \
+  ENIF_GET_##var_erl_type(argn, var, var_erl_dir)
+
+#define MPD_NIF_HEADER(ret,  ret_c_dir,  ret_c_type,  ret_erl_dir,  ret_erl_type,  \
+                       arg0, arg0_c_dir, arg0_c_type, arg0_erl_dir, arg0_erl_type) \
+  MPD_NIF_DECLARE_VAR(ret, ret_c_type)                                             \
+  MPD_NIF_DECLARE_VAR(arg0, arg0_c_type)                                           \
+  if ((argc != 1) ||                                                               \
+      !ENIF_GET(0, arg0, arg0_erl_dir, arg0_erl_type)) {                           \
+    enif_make_badarg(env);                                                         \
+  }
+
+#define MPD_NIF_DEFINE(function, args...) \
+  MPD_NIF_HEADER(args)
 
 #define MPD_NIF MPD_NIF_DEFINE
 
-MPD_NIF(mpd_iseven, result, C_RET_INT,           ERL_OUT_BOOLEAN,
-                    dec,    C_ARG_CONST_MPD_T_P, ERL_IN_RESOURCE_MPD_T)
+// MPD_NIF(mpd_iseven, result, C_RET_INT,           ERL_OUT_BOOLEAN,
+//                    dec,    C_ARG_CONST_MPD_T_P, ERL_IN_RESOURCE_MPD_T)
 
+// name: any
+//
+// c_dir: one of: {C_RET, C_ARG}
+// First entry must be C_RET
+//
+// c_type: C_INT, C_VOID
+
+MPD_NIF(mpd_iseven, result, C_RET,  C_INT,           ERL_OUT, ERL_BOOLEAN,
+                    dec,    C_ARG0, C_CONST_MPD_T_P, ERL_IN,  ERL_RESOURCE_MPD_T)
+
+// Format: LANGUAGE_DIRECTION_TYPE
+
+// MPD_NIF(mpd_iseven, C_ARG_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_OUT_BOOLEAN)
+// MPD_NIF(mpd_isfinite,    C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isinfinite,  C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isinteger,   C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isnan,       C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isnegative,  C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isnormal,    C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isodd,       C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isoddcoeff,  C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isoddword,   C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_ispositive,  C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isqnan,      C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// mpd_isshared_data       // Not Exported (Memory Model)
+// MPD_NIF(mpd_issigned,    C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_issnan,      C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// MPD_NIF(mpd_isspecial,   C_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_BOOLEAN)
+// mpd_isstatic            // Not Exported (Memory Model)
 // Format: LANGUAGE_DIRECTION_TYPE
 
 // MPD_NIF(mpd_iseven, C_ARG_CONST_MPD_T_P__ERL_IN_RESOURCE_MPD_T, C_RET_INT__ERL_OUT_BOOLEAN)

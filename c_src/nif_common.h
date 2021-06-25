@@ -8,7 +8,7 @@
 
 typedef struct {
   mpd_context_t* ctx;
-  ErlNifResourceType* resource_mpd_t;
+  ErlNifResourceType* resource_mpd_t_pp;
 } priv_data_t;
 
 #endif

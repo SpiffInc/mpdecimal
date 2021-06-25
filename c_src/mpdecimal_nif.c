@@ -32,7 +32,7 @@ static void mpd_custom_traphandler(mpd_context_t* ctx)
 }
 
 // Destructor for the "mpd_t" resource type.
-static void dtor_mpd_t(ErlNifEnv* env, void* obj)
+static void dtor_mpd_t_pp(ErlNifEnv* env, void* obj)
 {
   (void) env;
   mpd_del(*((mpd_t**) obj));
@@ -53,15 +53,15 @@ int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
     return 1;
   }
   
-  // Open the "mpd_t" resource type so that it can be passed in and out of NIF
-  // functions.
-  p_data->resource_mpd_t = enif_open_resource_type(caller_env,
-                                                   NULL,
-                                                   "mpd_t",
-                                                   dtor_mpd_t,
-                                                   ERL_NIF_RT_CREATE,
-                                                   NULL);
-  if (p_data->resource_mpd_t == NULL) {
+  // Open the "mpd_t_pp" resource type so that it can be passed in and out of
+  // NIFs.
+  p_data->resource_mpd_t_pp = enif_open_resource_type(caller_env,
+                                                      NULL,
+                                                      "mpd_t_pp",
+                                                      dtor_mpd_t_pp,
+                                                      ERL_NIF_RT_CREATE,
+                                                      NULL);
+  if (p_data->resource_mpd_t_pp == NULL) {
     return 1;
   }
   
