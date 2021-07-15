@@ -271,7 +271,7 @@ nif_interface = [
       "mpd_rem",
       "mpd_rem_near"
     ]
-  },
+  }
 ]
 
 # Tests
@@ -283,187 +283,161 @@ nif_interface = [
 
 defmodule NifGen do
 
-  def add_block(string, "") do
-    string
+  def append([line | []], string) do
+    [line <> string]
   end
 
-  def add_block(string, block) do
-    string <> "\n" <> block
+  def append([line | lines], string) do
+    [line | append(lines, string)] 
   end
 
+  # TODO: Should the call to enif_make_resource be delayed until after the MPD function call?
   def create_term(%{var: var, c_type: c_type, erl_dir: "out", erl_type: "resource_mpd_t_pp"}) do
-    "#{var} = enif_alloc_resource(RESOURCE_MPD_T_PP, sizeof(#{c_type}));\n" <>
-    "*#{var} = mpd_new(&ctx);\n" <>
-    "#{var}_term = enif_make_resource(env, #{var});\n" <>
-    "enif_release_resource(#{var});\n" <>
-
-    # TODO
-    # MPD_CONTEXT_TRAP_CHECK
-    "if (ctx.newtrap) {\n" <>
-      "#{"return nif_make_error_tuple(env, &ctx);\n" |> indent(2)}" <>
-    "}\n"
+    [
+      "#{var} = enif_alloc_resource(RESOURCE_MPD_T_PP, sizeof(#{c_type}));",
+      "*#{var} = mpd_new(&ctx);",
+      "#{var}_term = enif_make_resource(env, #{var});",
+      "enif_release_resource(#{var});",
+      "if (ctx.newtrap) {",
+        "return nif_make_error_tuple(env, &ctx);" |> indent,
+      "}"
+    ]
   end
 
   def create_term(%{erl_dir: "out"}) do
-    # Error
-    ""
+    # TODO: Error
+    []
   end
 
   def create_term(_) do
-    #Error
-    ""
+    # TODO: Not an error.
+    []
   end
 
   def create_terms(args) do
-    Enum.reduce(args, "", fn arg, string -> string |> add_block(create_term(arg)) end)
+    Enum.map(args, &create_term(&1))
   end
 
   def use_out_term(%{erl_dir: "out", var: var}) do
     "#{var}_term"
   end
-
+  
   def declare_out_term(arg = %{erl_dir: "out"}) do
-    "ERL_NIF_TERM #{use_out_term(arg)};\n"
+    ["ERL_NIF_TERM #{use_out_term(arg)};"]
   end
 
   def declare_out_term(_) do
-    ""
+    []
   end
 
-  def declare_out_terms([]) do
-    ""
-  end
-
-  def declare_out_terms([arg | args]) do
-    declare_out_term(arg) <> declare_out_terms(args)
+  def declare_out_terms(args) when is_list(args) do
+    Enum.map(args, &declare_out_term(&1))
   end
 
   def declare_nif(function) do
-    nif_header(function) <> ";"
+    [nif_header(function) <> ";"]
   end
 
   def declare_nifs(%{function: function_list}) do
-    function_list
-    |> Enum.map(&NifGen.declare_nif(&1))
+    Enum.map(function_list, &NifGen.declare_nif(&1))
   end
 
   def declare_var(%{c_type: "void"}) do
-    ""
+    []
   end
 
   def declare_var(%{c_type: c_type, var: var}) do
-    "#{c_type} #{var};\n"
+    "#{c_type} #{var};"
+  end
+
+  def declare_var(_) do
+    # TODO: Error?
+    []
   end
 
   def declare_vars(vars) do
-    Enum.map(vars, fn var -> declare_var(var) end)
-    |> List.to_string
+    Enum.map(vars, &declare_var(&1))
   end
 
   def define_nif(function, signature = %{return: return, args: args, context: context}) do
-    nif_header(function) <> "\n" <>
-    "{" <>
-      "#{declare_vars([return | args])
-         |> indent_block(2)}" <>
-
-      "#{declare_out_terms(args)
-         |> indent_block(2)}" <>
-
-      "#{process_args(args)
-         |> indent_block(2)}" <>
-
-      "#{init_context(context)
-         |> indent_block(2)}" <>
-
-      "#{create_terms(args)
-         |> indent(2)}" <>
-    
-      "#{call_function(function, signature)
-         |> indent_block(2)}" <>
-
-      "#{return(return, args)
-         |> indent_block(2)}" <>
-    "}\n"
+    [
+      nif_header(function),
+      "{",
+        [
+          declare_vars([return | args]),
+          declare_out_terms(args),
+          process_args(args),
+          init_context(context),
+          create_terms(args),
+          call_function(function, signature),
+          return(return, args)
+        ]
+        |> indent
+        |> space,
+      "}"
+    ]
   end
 
   def define_nifs(%{function: function_list, signature: signature}) do
-    function_list
-    |> Enum.map(&NifGen.define_nif(&1, signature))
+    Enum.map(function_list, &NifGen.define_nif(&1, signature))
   end
 
-  def indent("", _n) do
-    ""
-  end
-
-  # TODO: Remove guard?
+  def indent(lines, n \\ 4)
+  
   def indent(lines, n) when is_list(lines) do
-    Enum.map(lines, &indent_line(&1,n))
+    Enum.map(lines, &indent_line(&1, n))
   end
 
-  def indent(string, n) do
-    {last_line, line_list} = for line <- String.split(string, "\n") do
-                               indent_line(line, n)
-                             end
-                             |> List.pop_at(-1)
-    lines = for line <- line_list do
-              line <> "\n"
-            end
-            |> List.to_string
-    lines <> last_line
+  def indent(line, n) do
+    indent_line(line, n)
   end
 
-  def indent_block("", _n) do
+  # Enable recursive indentation of nested lists of lines.
+  defp indent_line(lines, n) when is_list(lines) do
+    indent(lines, n)
+  end
+
+  defp indent_line("", _n) do
     ""
   end
 
-  def indent_block(string, n) do
-    "\n" <> indent(string, n)
-  end
-
-  def indent_line("", _n) do
-    ""
-  end
-
-  def indent_line(line, n) do
+  defp indent_line(line, n) do
     String.duplicate(" ", n) <> line
   end
   
   def init_context(false) do
-    ""
+    []
   end
 
+  # Custom
   def init_context(true) do
-    "mpd_context_t ctx = nif_copy_context(env);\n"
+    ["mpd_context_t ctx = nif_copy_context(env);"]
   end
 
-  def enif_arg_format([arg | []]) do
-    "!" <> arg
-  end
-  
-  def enif_arg_format([arg | tail]) do
-    "!" <> arg <> " ||\n" <> enif_arg_format(tail)
-  end
-
+  # Custom
   def enif_get_arg(%{erl_dir: "in", erl_type: "int64", var: var}, argn) do
     "enif_get_int64(env, argv[#{argn}], &#{var})"
   end
   
+  # Custom
   def enif_get_arg(%{erl_dir: "in", erl_type: "uint64", var: var}, argn) do
     "enif_get_uint64(env, argv[#{argn}], &#{var})"
   end
 
+  # Custom
   def enif_get_arg(%{erl_dir: "in", erl_type: "resource_mpd_t_pp", var: var}, argn) do
     "enif_get_resource(env, argv[#{argn}], RESOURCE_MPD_T_PP, (void**) &#{var})"
   end
 
   def enif_get_arg(%{}, _) do
-    ""
+    # TODO: Error?
+    [] 
   end
 
-  def enif_args_format(args) do
-    Enum.with_index(args, fn arg, argn -> enif_get_arg(arg, argn) end)
-    |> Enum.reject(fn arg -> arg == "" end)
-    |> enif_arg_format()
+  def enif_get_args(args) do
+    Enum.with_index(args, &(enif_get_arg(&1, &2)))
+    |> Enum.map(&("!" <> &1))
+    |> delimit(" ||")
   end
 
   def process_args(args) do
@@ -472,14 +446,20 @@ defmodule NifGen do
     case argc_in do
       0 ->
         # TODO: Does this case actually exist?
-        "if (argc != 0) {\n" <>
-        "  return enif_make_badarg(env);\n" <>
-        "}\n"
+        [
+          "if (argc != 0) {",
+            "return enif_make_badarg(env);" |> indent,
+          "}"
+        ]
       _ ->
-        "if ((argc != #{argc_in}) ||\n" <>
-            "#{enif_args_format(args_in) |> indent(4)}) {\n" <>
-        "  return enif_make_badarg(env);\n" <>
-        "}\n"
+        [
+          "if ((argc != #{argc_in}) ||",
+               enif_get_args(args_in)
+               |> append(") {")
+               |> indent(4),
+            "return enif_make_badarg(env);" |> indent,
+          "}"
+        ]
     end
   end
 
@@ -500,11 +480,7 @@ defmodule NifGen do
   def delimit(list, delimiter) do
     Enum.intersperse(list, delimiter)
     |> Enum.chunk_every(2)
-    |> Enum.map(&List.to_string(&1))
-  end
-
-  def append(list, string) do
-    Enum.map(list, fn x -> x <> string end)
+    |> Enum.map(&Enum.join(&1))
   end
 
   # TODO:
@@ -514,19 +490,19 @@ defmodule NifGen do
   end
 
   def call_function(_return = %{c_type: "void"}, function, args, _context = false) do
-    "#{function}(#{list_args(args)});\n"
+    ["#{function}(#{list_args(args)});"]
   end
   
   def call_function(_return = %{c_type: "void"}, function, args, _context = true) do
-    "#{function}(#{list_args(args)}, &ctx);\n"
+    ["#{function}(#{list_args(args)}, &ctx);"]
   end
   
   def call_function(%{var: return_var}, function, args, _context = false) do
-    "#{return_var} = #{function}(#{list_args(args)});\n"
+    ["#{return_var} = #{function}(#{list_args(args)});"]
   end
   
   def call_function(%{var: return_var}, function, args, _context = true) do
-    "#{return_var} = #{function}(#{list_args(args)}, &ctx);\n"
+    ["#{return_var} = #{function}(#{list_args(args)}, &ctx);"]
   end
 
   def nif_header(function) do
@@ -538,24 +514,31 @@ defmodule NifGen do
   end
 
   def nif_registry(entries) do
-    ["ErlNifFunc funcs[] = {"] ++
-        (entries |> indent(2)) ++
-    ["};"]
-    |> Enum.intersperse("\n")
+    [
+      "ErlNifFunc funcs[] = {",
+        entries |> indent,
+      "};"
+    ]
+  end
+
+  def print(code) do
+    code
+    |> List.flatten
+    |> NifGen.delimit("\n")
+    |> IO.puts
   end
 
   def register_nif(function, %{args: args}) do
     argc_in = Enum.count(args, &match?(%{erl_dir: "in"}, &1))
-    "{\"#{function}\", #{argc_in}, #{NifGen.nif_name(function)}}"
+    ["{\"#{function}\", #{argc_in}, #{NifGen.nif_name(function)}}"]
   end
 
   def register_nifs(%{function: function_list, signature: signature}) do
-    function_list
-    |> Enum.map(&NifGen.register_nif(&1, signature))
+    Enum.map(function_list, &NifGen.register_nif(&1, signature))
   end
 
   def return(%{c_type: "int", erl_dir: "out", erl_type: "boolean", var: var}, _) do
-    "return enif_make_boolean(env, #{var});\n"
+    ["return enif_make_boolean(env, #{var});"]
   end
 
   def return(%{erl_dir: "none"}, args) do
@@ -565,40 +548,52 @@ defmodule NifGen do
   end
 
   def return(_, _) do
-    ""
+    []
   end
 
   def return_statement(_, 0) do
-    "ERROR"
+    #TODO: Error
+    []
   end
 
   def return_statement([out_arg], 1) do
-    "return #{use_out_term(out_arg)};\n"
+    ["return #{use_out_term(out_arg)};"]
   end
 
   def return_statement(out_args, out_argc) do
     # TODO: use_out_args
-    "return enif_make_tuple#{out_argc}(#{list_args(out_args)});\n"
+    ["return enif_make_tuple#{out_argc}(#{list_args(out_args)});"]
+  end
+
+  def space(code) when is_list(code) do
+    # Reject any empty lists or any lists containing only empty lists (of any
+    # arbitrary nesting level). Intersperse empty strings to space code blocks.
+    code
+    |> Enum.reject(&(&1 |> List.flatten |> Enum.empty?))
+    |> Enum.intersperse("")
   end
 end
 
 # Declare NIFs
-Enum.reduce(nif_interface, [], &(&2 ++ NifGen.declare_nifs(&1)))
+Enum.reduce(nif_interface, [], &(NifGen.declare_nifs(&1) ++ &2))
 |> Enum.sort
-|> Enum.intersperse("\n")
-|> IO.puts
+|> NifGen.print
 
 IO.puts("")
 
 # Define NIFs
-Enum.reduce(nif_interface, [], &(&2 ++ NifGen.define_nifs(&1)))
+Enum.reduce(nif_interface, [], &(NifGen.define_nifs(&1) ++ &2))
 |> Enum.sort
-|> Enum.intersperse("\n")
-|> IO.puts
+|> NifGen.space
+|> NifGen.print
+
+IO.puts("")
 
 # Register NIFs
-Enum.reduce(nif_interface, [], &(&2 ++ NifGen.register_nifs(&1)))
+Enum.reduce(nif_interface, [], &(NifGen.register_nifs(&1) ++ &2))
 |> Enum.sort
 |> NifGen.delimit(",")
 |> NifGen.nif_registry
-|> IO.puts
+|> NifGen.print
+
+IO.puts("")
