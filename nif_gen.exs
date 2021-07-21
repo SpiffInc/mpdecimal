@@ -15,21 +15,21 @@
 # Side Effects
 # MPD MINALLOC is an unavoidable side-effect of using this library.
 
-nif_interface = [
+libmpdec_interface = [
   %{
     signature:
     %{
-      return: %{var: "result", c_type: "int",           erl_dir: "out", erl_type: "boolean"},
+      return: %{name: "result", c_type: "int",           erl_dir: "out", erl_type: "boolean"          },
       
-      args:
+      parameters:
       [ 
-              %{var: "dec",    c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "dec",    c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: false
     },
 
-    function:
+    functions:
     [
       "mpd_iseven",
       "mpd_isfinite",
@@ -49,18 +49,18 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{               c_type: "void",          erl_dir: "none"                              },
+      return: %{               c_type: "void",          erl_dir: "none"                               },
       
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_abs",
       "mpd_canonical",
@@ -89,18 +89,18 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{var: "",       c_type: "int",           erl_dir: "out", erl_type: "int"              },
+      return: %{name: "",       c_type: "int",           erl_dir: "out", erl_type: "int"              },
       
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_check_nan"
     ]
@@ -111,17 +111,17 @@ nif_interface = [
     %{
       return: %{               c_type: "void",          erl_dir: "none"                              },
 
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "b",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "b",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_add",
       "mpd_and",
@@ -148,19 +148,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{               c_type: "void",          erl_dir: "none"                              },
+      return: %{               c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "b",      c_type: "int64_t",       erl_dir: "in",  erl_type: "int64"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "b",      c_type: "int64_t",       erl_dir: "in",  erl_type: "int64"            }
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_add_i64"
     ]
@@ -169,19 +169,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{               c_type: "void",          erl_dir: "none"                              },
+      return: %{               c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "b",      c_type: "uint64_t",      erl_dir: "in",  erl_type: "uint64"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "b",      c_type: "uint64_t",      erl_dir: "in",  erl_type: "uint64"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_add_u64"
     ]
@@ -190,19 +190,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{               c_type: "void",          erl_dir: "none"                              },
+      return: %{               c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "b",      c_type: "int64_t",       erl_dir: "in",  erl_type: "int64"            }
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a",      c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "b",      c_type: "int64_t",       erl_dir: "in",  erl_type: "int64"            }
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_add_i64"
     ]
@@ -211,19 +211,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{          c_type: "void",          erl_dir: "none"                              },
+      return: %{          c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "q", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "a", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "b", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "q", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "a", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "b", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_div",
       "mpd_divint"
@@ -233,19 +233,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{               c_type: "void",          erl_dir: "none"                              },
+      return: %{               c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "base",   c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "exp",    c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "result", c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "base",   c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "exp",    c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_pow"
     ]
@@ -254,19 +254,19 @@ nif_interface = [
   %{
     signature:
     %{
-      return: %{             c_type: "void",          erl_dir: "none"                              },
+      return: %{             c_type: "void",          erl_dir: "none"                               },
 
-      args:
+      parameters:
       [       
-              %{var: "r",    c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
-              %{var: "base", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
-              %{var: "exp",  c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
+              %{name: "r",    c_type: "mpd_t**",       erl_dir: "out", erl_type: "resource_mpd_t_pp"},
+              %{name: "base", c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"},
+              %{name: "exp",  c_type: "const mpd_t**", erl_dir: "in",  erl_type: "resource_mpd_t_pp"}
       ],
 
       context: true
     },
 
-    function:
+    functions:
     [
       "mpd_rem",
       "mpd_rem_near"
@@ -274,178 +274,55 @@ nif_interface = [
   }
 ]
 
-# Tests
-# - Cannot have a return map with erl_dir: "out" and an argument map with erl_dir: "out"?
+# TODO: Tests
 # - All variable names in a function signature must be unique.
-# - A return map with c_type: "void" has no other keys.
-# - For resources, the c_type and erl_type match.
-# - If multiple argument maps with erl_dir: "out" exist in the same signature, they each have a unique value for the :erl_tuple key.
+# - A return map with c_type: "void" has erl_dir: "none" and no other keys.
+# - For resource parameters, the c_type and erl_type match.
+# - Cannot have a return map with erl_dir: "out" and an argument map with erl_dir: "out"?
+# - If multiple argument maps with erl_dir: "out" exist in the same signature, they each have a unique value for the :erl_tuple key?
 
 defmodule NifGen do
 
-  def append([line | []], string) do
-    [line <> string]
+  # Append to the last line in the list, if it exists.
+  def append_to_last([], _) do
+    []
   end
 
-  def append([line | lines], string) do
-    [line | append(lines, string)] 
+  def append_to_last(lines, string) when is_list(lines) and is_binary(string) do
+    [last | other] = lines
+                    |> List.flatten
+                    |> Enum.reverse
+
+    [last <> string | other] |> Enum.reverse
   end
 
-  # TODO: Should the call to enif_make_resource be delayed until after the MPD function call?
-  def create_term(%{var: var, c_type: c_type, erl_dir: "out", erl_type: "resource_mpd_t_pp"}) do
+  def call_function(%{c_type: "void"} = _return, function, args, false = _context) do
+    ["#{function}(#{use_vars(args)});"]
+  end
+  
+  def call_function( %{c_type: "void"} = _return, function, args, true = _context) do
     [
-      "#{var} = enif_alloc_resource(RESOURCE_MPD_T_PP, sizeof(#{c_type}));",
-      "*#{var} = mpd_new(&ctx);",
-      "#{var}_term = enif_make_resource(env, #{var});",
-      "enif_release_resource(#{var});",
-      "if (ctx.newtrap) {",
-        "return nif_make_error_tuple(env, &ctx);" |> indent,
-      "}"
+      "#{function}(#{use_vars(args)}, &ctx);",
+      mpd_context_trap_check()
+    ]
+  end
+  
+  def call_function(return, function, args, false = _context) do
+    ["#{use_var(return)} = #{function}(#{use_vars(args)});"]
+  end
+  
+  def call_function(return, function, args, true = _context) do
+    [
+      "#{use_var(return)} = #{function}(#{use_vars(args)}, &ctx);",
+      mpd_context_trap_check()
     ]
   end
 
-  def create_term(%{erl_dir: "out"}) do
-    # TODO: Error
-    []
-  end
-
-  def create_term(_) do
-    # TODO: Not an error.
-    []
-  end
-
-  def create_terms(args) do
-    Enum.map(args, &create_term(&1))
-  end
-
-  def use_out_term(%{erl_dir: "out", var: var}) do
-    "#{var}_term"
-  end
-  
-  def declare_out_term(arg = %{erl_dir: "out"}) do
-    ["ERL_NIF_TERM #{use_out_term(arg)};"]
-  end
-
-  def declare_out_term(_) do
-    []
-  end
-
-  def declare_out_terms(args) when is_list(args) do
-    Enum.map(args, &declare_out_term(&1))
-  end
-
-  def declare_nif(function) do
-    [nif_header(function) <> ";"]
-  end
-
-  def declare_nifs(%{function: function_list}) do
-    Enum.map(function_list, &NifGen.declare_nif(&1))
-  end
-
-  def declare_var(%{c_type: "void"}) do
-    []
-  end
-
-  def declare_var(%{c_type: c_type, var: var}) do
-    "#{c_type} #{var};"
-  end
-
-  def declare_var(_) do
-    # TODO: Error?
-    []
-  end
-
-  def declare_vars(vars) do
-    Enum.map(vars, &declare_var(&1))
-  end
-
-  def define_nif(function, signature = %{return: return, args: args, context: context}) do
-    [
-      nif_header(function),
-      "{",
-        [
-          declare_vars([return | args]),
-          declare_out_terms(args),
-          process_args(args),
-          init_context(context),
-          create_terms(args),
-          call_function(function, signature),
-          return(return, args)
-        ]
-        |> indent
-        |> space,
-      "}"
-    ]
-  end
-
-  def define_nifs(%{function: function_list, signature: signature}) do
-    Enum.map(function_list, &NifGen.define_nif(&1, signature))
-  end
-
-  def indent(lines, n \\ 4)
-  
-  def indent(lines, n) when is_list(lines) do
-    Enum.map(lines, &indent_line(&1, n))
-  end
-
-  def indent(line, n) do
-    indent_line(line, n)
-  end
-
-  # Enable recursive indentation of nested lists of lines.
-  defp indent_line(lines, n) when is_list(lines) do
-    indent(lines, n)
-  end
-
-  defp indent_line("", _n) do
-    ""
-  end
-
-  defp indent_line(line, n) do
-    String.duplicate(" ", n) <> line
-  end
-  
-  def init_context(false) do
-    []
-  end
-
-  # Custom
-  def init_context(true) do
-    ["mpd_context_t ctx = nif_copy_context(env);"]
-  end
-
-  # Custom
-  def enif_get_arg(%{erl_dir: "in", erl_type: "int64", var: var}, argn) do
-    "enif_get_int64(env, argv[#{argn}], &#{var})"
-  end
-  
-  # Custom
-  def enif_get_arg(%{erl_dir: "in", erl_type: "uint64", var: var}, argn) do
-    "enif_get_uint64(env, argv[#{argn}], &#{var})"
-  end
-
-  # Custom
-  def enif_get_arg(%{erl_dir: "in", erl_type: "resource_mpd_t_pp", var: var}, argn) do
-    "enif_get_resource(env, argv[#{argn}], RESOURCE_MPD_T_PP, (void**) &#{var})"
-  end
-
-  def enif_get_arg(%{}, _) do
-    # TODO: Error?
-    [] 
-  end
-
-  def enif_get_args(args) do
-    Enum.with_index(args, &(enif_get_arg(&1, &2)))
-    |> Enum.map(&("!" <> &1))
-    |> delimit(" ||")
-  end
-
-  def process_args(args) do
-    args_in = Enum.filter(args, fn arg -> match?(%{erl_dir: "in"}, arg) end)
-    argc_in = Enum.count(args_in) 
-    case argc_in do
+  def check_args(args) do
+    in_args = Enum.filter(args, &match?(%{erl_dir: "in"}, &1))
+    in_argc = Enum.count(in_args) 
+    case in_argc do
       0 ->
-        # TODO: Does this case actually exist?
         [
           "if (argc != 0) {",
             "return enif_make_badarg(env);" |> indent,
@@ -453,56 +330,181 @@ defmodule NifGen do
         ]
       _ ->
         [
-          "if ((argc != #{argc_in}) ||",
-               enif_get_args(args_in)
-               |> append(") {")
-               |> indent(4),
+          "if ((argc != #{in_argc}) ||",
+               get_args(in_args) |> append_to_last(") {") |> indent(4),
             "return enif_make_badarg(env);" |> indent,
           "}"
         ]
     end
   end
 
-  def use_arg(%{var: var, erl_type: "resource_mpd_t_pp"}) do
-    "*" <> var
+  def create_resource(%{erl_dir: "out", erl_type: "resource_mpd_t_pp"} = arg) do
+    [
+      "error_term = create_resource_mpd_t_pp(env, &ctx, &#{use_var(arg)}, &#{use_term(arg)});",
+      "if (enif_is_tuple(env, error_term)) {",
+        "return error_term;" |> indent,
+      "}"
+    ]
   end
 
-  def use_arg(%{var: var}) do
-    var
+  def create_resource(%{erl_dir: "out"} = arg) do
+    raise NifGenError, message: "Creation of Erlang resource not supported for: #{inspect(arg)}"
   end
 
-  def list_args(args) do
-    Enum.map(args, fn arg -> use_arg(arg) end)
-    |> delimit(", ")
-    |> List.to_string
+  def create_resource(_) do
+    []
+  end
+
+  def create_resources(args) do
+    Enum.map(args, &create_resource(&1))
+    |> separate_blocks
+  end
+
+  def declare_nif(function) do
+    [nif_header(function) <> ";"]
+  end
+
+  def declare_nif_interface(libmpdec_interface) do
+    Enum.reduce(libmpdec_interface, [], &(declare_nifs(&1) ++ &2))
+    |> Enum.sort
+    |> print
+  end
+
+  def declare_nifs(%{functions: functions}) do
+    Enum.map(functions, &NifGen.declare_nif(&1))
+  end
+
+  def declare_term(%{erl_dir: "out"} = arg) do
+    ["ERL_NIF_TERM #{use_term(arg)};"]
+  end
+
+  def declare_term(_) do
+    []
+  end
+
+  def declare_terms(args) when is_list(args) do
+    declared_terms = Enum.map(args, &declare_term(&1))
+                     |> reject_empty_lists
+
+    case (Enum.count(declared_terms)) do
+      0 -> []
+      _ -> declared_terms ++ ["ERL_NIF_TERM error_term;"]
+    end
+  end
+
+  def declare_var(%{c_type: "void"}) do
+    []
+  end
+
+  def declare_var(%{c_type: c_type, name: name}) do
+    ["#{c_type} #{name};"]
+  end
+
+  def declare_var(var) do
+    raise NifGenError, message: "Declaration of variable not supported for: #{inspect(var)}"
+  end
+
+  def declare_vars(vars) do
+    Enum.map(vars, &declare_var(&1))
+  end
+
+  def define_nif(function, %{return: return, parameters: args, context: context}) do
+    [
+      nif_header(function),
+      "{",
+        [
+          declare_vars([return | args]),
+          declare_terms(args),
+          check_args(args),
+          init_context(context),
+          create_resources(args),
+          call_function(return, function, args, context),
+          return([return | args])
+        ]
+        |> indent
+        |> separate_blocks,
+      "}"
+    ]
+  end
+
+  def define_nif_interface(libmpdec_interface) do
+    Enum.reduce(libmpdec_interface, [], &(define_nifs(&1) ++ &2))
+    |> Enum.sort
+    |> separate_blocks
+    |> print
+  end
+
+  def define_nifs(%{functions: functions, signature: signature}) do
+    Enum.map(functions, &NifGen.define_nif(&1, signature))
   end
 
   def delimit(list, delimiter) do
-    Enum.intersperse(list, delimiter)
+    list
+    |> reject_empty_lists
+    |> Enum.intersperse(delimiter)
     |> Enum.chunk_every(2)
     |> Enum.map(&Enum.join(&1))
   end
 
-  # TODO:
-  # Check for new traps when context is true.
-  def call_function(function, %{return: return, args: args, context: context}) do
-    call_function(return, function, args, context)
+  def empty_list?(list) when is_list(list) do
+    Enum.empty?(list)
   end
 
-  def call_function(_return = %{c_type: "void"}, function, args, _context = false) do
-    ["#{function}(#{list_args(args)});"]
+  def empty_list?(_) do
+    false
+  end
+
+  def get_arg(%{erl_dir: "in", erl_type: "int64"} = arg, argn) do
+    "enif_get_int64(env, argv[#{argn}], &#{use_var(arg)})"
   end
   
-  def call_function(_return = %{c_type: "void"}, function, args, _context = true) do
-    ["#{function}(#{list_args(args)}, &ctx);"]
+  def get_arg(%{erl_dir: "in", erl_type: "resource_mpd_t_pp"} = arg, argn) do
+    "enif_get_resource(env, argv[#{argn}], RESOURCE_MPD_T_PP, (void**) &#{use_var(arg)})"
+  end
+
+  def get_arg(%{erl_dir: "in", erl_type: "uint64"} = arg, argn) do
+    "enif_get_uint64(env, argv[#{argn}], &#{use_var(arg)})"
+  end
+
+  def get_arg(arg, _) do
+    raise NifGenError, message: "Cannot get Erlang argument for: #{inspect(arg)}"
+  end
+
+  def get_args(args) do
+    Enum.with_index(args, &("!" <> get_arg(&1, &2)))
+    |> delimit(" ||")
+  end
+
+  def indent(lines, n \\ 4)
+  
+  # Recursively indent nested lists of lines.
+  def indent(lines, n) when is_list(lines) do
+    Enum.map(lines, &indent(&1, n))
+  end
+
+  # Don't indent empty lines.
+  def indent("", _n) do
+    []
+  end
+
+  def indent(line, n)  when is_binary(line) do
+    String.duplicate(" ", n) <> line
   end
   
-  def call_function(%{var: return_var}, function, args, _context = false) do
-    ["#{return_var} = #{function}(#{list_args(args)});"]
+  def init_context(false = _context) do
+    []
   end
-  
-  def call_function(%{var: return_var}, function, args, _context = true) do
-    ["#{return_var} = #{function}(#{list_args(args)}, &ctx);"]
+
+  def init_context(true = _context) do
+    ["mpd_context_t ctx = nif_copy_context(env);"]
+  end
+
+  def mpd_context_trap_check do
+    [
+      "if (ctx.newtrap) {",
+        "return make_tuple_mpd_error(env, &ctx);" |> indent,
+      "}"
+    ]
   end
 
   def nif_header(function) do
@@ -510,7 +512,7 @@ defmodule NifGen do
   end
 
   def nif_name(function) do
-    "nif_" <> function
+    "nif__" <> function
   end
 
   def nif_registry(entries) do
@@ -521,79 +523,103 @@ defmodule NifGen do
     ]
   end
 
-  def print(code) do
-    code
+  def print(lines) do
+    lines
     |> List.flatten
     |> NifGen.delimit("\n")
     |> IO.puts
   end
 
-  def register_nif(function, %{args: args}) do
-    argc_in = Enum.count(args, &match?(%{erl_dir: "in"}, &1))
-    ["{\"#{function}\", #{argc_in}, #{NifGen.nif_name(function)}}"]
+  def register_nif(function, %{parameters: parameters}) do
+    arity = Enum.count(parameters, &match?(%{erl_dir: "in"}, &1))
+    ["{\"#{function}\", #{arity}, #{NifGen.nif_name(function)}}"]
   end
 
-  def register_nifs(%{function: function_list, signature: signature}) do
-    Enum.map(function_list, &NifGen.register_nif(&1, signature))
+  def register_nif_interface(libmpdec_interface) do
+    Enum.reduce(libmpdec_interface, [], &(NifGen.register_nifs(&1) ++ &2))
+    |> Enum.sort
+    |> NifGen.delimit(",")
+    |> NifGen.nif_registry
+    |> NifGen.print
   end
 
-  def return(%{c_type: "int", erl_dir: "out", erl_type: "boolean", var: var}, _) do
-    ["return enif_make_boolean(env, #{var});"]
+  def register_nifs(%{functions: functions, signature: signature}) do
+    Enum.map(functions, &NifGen.register_nif(&1, signature))
   end
 
-  def return(%{erl_dir: "none"}, args) do
-    out_args = Enum.filter(args, fn arg -> match?(%{erl_dir: "out"}, arg) end) 
-    out_argc = Enum.count(out_args)
-    return_statement(out_args, out_argc)
+  def reject_empty_lists(lines) when is_list(lines) do
+    lines
+    |> Enum.map(&reject_empty_lists(&1))
+    |> Enum.reject(&empty_list?(&1))
   end
 
-  def return(_, _) do
-    []
+  def reject_empty_lists(line) do
+    line
+  end
+
+  def return(vars) do
+    out_vars = Enum.filter(vars, &match?(%{erl_dir: "out"}, &1)) 
+    out_varc = Enum.count(out_vars)
+    return_statement(out_vars, out_varc)
   end
 
   def return_statement(_, 0) do
-    #TODO: Error
-    []
+    raise NifGenError, message: "Cannot generate return statement because no variables match %{erl_dir: \"out\"}"
   end
 
-  def return_statement([out_arg], 1) do
-    ["return #{use_out_term(out_arg)};"]
+  def return_statement([var], 1) do
+    ["return #{use_term(var)};"]
   end
 
-  def return_statement(out_args, out_argc) do
-    # TODO: use_out_args
-    ["return enif_make_tuple#{out_argc}(#{list_args(out_args)});"]
+  def return_statement(vars, varc) do
+    ["return enif_make_tuple#{varc}(#{use_terms(vars)});"]
   end
 
-  def space(code) when is_list(code) do
-    # Reject any empty lists or any lists containing only empty lists (of any
-    # arbitrary nesting level). Intersperse empty strings to space code blocks.
-    code
-    |> Enum.reject(&(&1 |> List.flatten |> Enum.empty?))
+  def separate_blocks(lines) when is_list(lines) do
+    lines
+    |> reject_empty_lists
     |> Enum.intersperse("")
   end
+
+  def use_term(%{c_type: "int", erl_dir: "out", erl_type: "boolean"} = var) do
+    "make_boolean(env, #{use_var(var)})"
+  end
+
+  def use_term(%{erl_dir: "out", name: name}) do
+    "#{name}_term"
+  end
+
+  def use_terms(vars) do
+    Enum.map(vars, &use_term(&1))
+    |> delimit(", ")
+    |> List.to_string
+  end
+
+  def use_var(%{erl_type: "resource_mpd_t_pp", name: name}) do
+    "*" <> name
+  end
+
+  def use_var(%{name: name}) do
+    name
+  end
+  
+  def use_vars(vars) do
+    Enum.map(vars, &use_var(&1))
+    |> delimit(", ")
+    |> List.to_string
+  end
+
 end
 
-# Declare NIFs
-Enum.reduce(nif_interface, [], &(NifGen.declare_nifs(&1) ++ &2))
-|> Enum.sort
-|> NifGen.print
+defmodule NifGenError do
+  defexception message: "Error"
+end
 
+# TODO: Add script arguments to specify each of these functions individually.
+# TODO: Generate Elixir function definitions.
+NifGen.declare_nif_interface(libmpdec_interface)
 IO.puts("")
-
-# Define NIFs
-Enum.reduce(nif_interface, [], &(NifGen.define_nifs(&1) ++ &2))
-|> Enum.sort
-|> NifGen.space
-|> NifGen.print
-
+NifGen.define_nif_interface(libmpdec_interface)
 IO.puts("")
-
-# Register NIFs
-Enum.reduce(nif_interface, [], &(NifGen.register_nifs(&1) ++ &2))
-|> Enum.sort
-|> NifGen.delimit(",")
-|> NifGen.nif_registry
-|> NifGen.print
-
+NifGen.register_nif_interface(libmpdec_interface)
 IO.puts("")

@@ -12,8 +12,9 @@
 #include "nif_function.h"
 #include "nif_function_register.h"
 
+// TODO: setup to set_up
 // Configure the mpdecimal library to use the memory allocator provided by the
-// BEAM VM.
+// Erlang VM (erts_alloc).
 static inline void setup_mpd_mem_alloc(void)
 {
   mpd_mallocfunc = enif_alloc;
@@ -31,7 +32,8 @@ static void mpd_custom_traphandler(mpd_context_t* ctx)
   (void) ctx;
 }
 
-// Destructor for the "mpd_t" resource type.
+// Destructor for the "mpd_t_pp" resource type.
+// TODO: Update to dtor_resource_mpd_t_pp
 static void dtor_mpd_t_pp(ErlNifEnv* env, void* obj)
 {
   (void) env;
@@ -43,7 +45,7 @@ int load(ErlNifEnv* caller_env, void** priv_data, ERL_NIF_TERM load_info)
   setup_mpd_mem_alloc();
 
   // The default trap handler for the mpdecimal library raises SIGFPE. While
-  // the BEAM VM happens to ignore SIGFPE (as of OTP 21), it's a bit cleaner
+  // the Erlang VM happens to ignore SIGFPE (as of OTP 21), it's a bit cleaner
   // not to rely on this behavior and call a custom trap handler that does not
   // raise SIGFPE at all.
   mpd_traphandler = mpd_custom_traphandler;

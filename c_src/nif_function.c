@@ -49,10 +49,10 @@
 
 #define MPD_CONTEXT_TRAP_CHECK                                                \
   if (ctx.newtrap) {                                                          \
-    return nif_make_error_tuple(env, &ctx);                                   \
+    return make_tuple_mpd_error(env, &ctx);                                   \
   }
 
-// TODO: Immutable resourrces are used in keeping with the Erlang paradigm.
+// TODO: Immutable resources are used in keeping with the Erlang paradigm.
 // TODO: Note that the result is created here, keeping with the Erlang paradigm of immutable data.
 // Out arguments are always created here, new.
 // Only the functions that work with Erlang data types are supported.
@@ -107,13 +107,19 @@ NIF_FUNCTION_HEADER(function)                                                 \
   MPD_FUNCTION(function, argc_in, argc_out)                                   \
 }
 
-static ERL_NIF_TERM enif_make_boolean(ErlNifEnv* env, int i)
+static ERL_NIF_TERM make_boolean(ErlNifEnv* env, int i)
 {
   return (i != 0) ? enif_make_atom(env, "true")
                   : enif_make_atom(env, "false");
 }
 
-static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
+// TODO: Custom error name table.
+// MPD_Malloc_error -> something else
+
+// TODO: Consider how the error conditions that may occur interact with the context model used by the Elixir mpdecimal library.
+
+// TODO: Rename this function.
+static ERL_NIF_TERM make_tuple_mpd_error(ErlNifEnv* env, mpd_context_t* ctx)
 {
   char signal_list_string[MPD_MAX_SIGNAL_LIST];
   mpd_ssize_t signal_list_strlen;
@@ -131,6 +137,39 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
          signal_list_strlen);
 
   return enif_make_tuple2(env, enif_make_atom(env, "error"), signal_list_term);
+}
+
+// TODO
+// create: enif_alloc_resource, populate resource, and enif_make_resource
+// In the event that there is a memory allocation error on mpd_new, the Erlang
+// term is still created and eligible for garbage collection. The destructor
+// will not fail since it is legal to call free on NULL. It is desirable to
+// call enif_make_resource before checking for mpd_new failure because
+// enif_release_resource makes the resource eligible for garbage collection,
+// and it must be called after enif_make_resource.
+static ERL_NIF_TERM create_resource_mpd_t_pp(ErlNifEnv* env,
+                                             mpd_context_t* ctx,
+                                             mpd_t*** resource,
+                                             ERL_NIF_TERM* resource_term)
+{
+  *resource = enif_alloc_resource(RESOURCE_MPD_T_PP, sizeof(mpd_t**));
+  if (resource == NULL) {
+    // TODO: Return an Erlang memory allocation error instead of an MPD memory
+    // allocation error.
+    mpd_addstatus_raise(ctx, MPD_Malloc_error);
+    return make_tuple_mpd_error(env, ctx);
+  }
+
+  **resource = mpd_new(ctx);
+
+  *resource_term = enif_make_resource(env, *resource);
+  enif_release_resource(resource);
+
+  if (ctx->newtrap) {
+    return make_tuple_mpd_error(env, ctx);
+  }
+
+  return enif_make_atom(env, "ok");
 }
 
 // Ensure Thread Safety
@@ -168,7 +207,7 @@ NIF_FUNCTION_HEADER(is_mpdecimal)
   const mpd_t** a;
   int result = enif_get_resource(env, argv[0], ((priv_data_t*) enif_priv_data(env))->resource_mpd_t_pp, (void**) &a);
 
-  return enif_make_boolean(env, result);
+  return make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isnan)
@@ -176,28 +215,28 @@ NIF_FUNCTION_HEADER(isnan)
   NIF_GET_RESOURCE_1IN
   int result = mpd_isnan(*a);
 
-  return enif_make_boolean(env, result);
+  return make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(ispositive)
 {
   NIF_GET_RESOURCE_1IN
   int result = mpd_ispositive(*a);
-  return enif_make_boolean(env, result);
+  return make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isinfinite)
 {
   NIF_GET_RESOURCE_1IN
   int result = mpd_isinfinite(*a);
-  return enif_make_boolean(env, result);
+  return make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(isinteger)
 {
   NIF_GET_RESOURCE_1IN
   int result = mpd_isinteger(*a);
-  return enif_make_boolean(env, result);
+  return make_boolean(env, result);
 }
 
 NIF_FUNCTION_HEADER(set_i64)
@@ -250,7 +289,7 @@ NIF_FUNCTION_HEADER(to_sci)
     // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
     // sensitive.
     mpd_addstatus_raise(&ctx, MPD_Malloc_error);
-    return nif_make_error_tuple(env, &ctx);
+    return make_tuple_mpd_error(env, &ctx);
   }
 
   // Package the string into an Erlang binary.
@@ -277,7 +316,7 @@ NIF_FUNCTION_HEADER(to_eng)
     // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
     // sensitive.
     mpd_addstatus_raise(&ctx, MPD_Malloc_error);
-    return nif_make_error_tuple(env, &ctx);
+    return make_tuple_mpd_error(env, &ctx);
   }
 
   // Package the string into an Erlang binary.
