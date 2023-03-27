@@ -24,7 +24,7 @@ defmodule MPDecimal do
 
     input = Decimal.to_string(input, :xsd) <> "\0"
 
-    case Nif.exp(input) do
+    case Nif.exp(input) do 
       {:ok, result} -> Decimal.new(result)
       {:error, message} -> raise(MPDecimal.Error, message: message)
     end
