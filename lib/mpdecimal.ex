@@ -45,6 +45,13 @@ defmodule MPDecimal do
   end
 
   def power(%Decimal{} = base, %Decimal{} = exponent) do
+    if (:lt == Decimal.compare(exponent, -10_000) || :gt == Decimal.compare(exponent, 10_000)) && Decimal.new("Infinity") != exponent do
+      raise(MPDecimal.Error,
+        message:
+          "This function is defined x ^ y where y >= -10000 and <= 1E-10000, except for the special case of +/-Infinity."
+      )
+    end
+
     # Add the null terminator to the end of each string argument so that it
     # forms a valid cstring for consumption by the NIF.
     base = Decimal.to_string(base, :xsd) <> "\0"
