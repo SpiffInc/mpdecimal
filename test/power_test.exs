@@ -55,9 +55,9 @@ defmodule PowerTest do
   end
 
   test "extreme values" do
-    # assert_power("0.1", "-10000", "1E+10000")
-    # assert_power("1.1", "1E-10000", "1.000000000000000000000000000")
-    # assert_power(9, "10000", "2.661303427217419791978201712E+9542")
+    assert_power("0.1", "-10000", "1E+10000")
+    assert_power("1.1", "1E-10000", "1.000000000000000000000000000")
+    assert_power(9, "10000", "2.661303427217419791978201712E+9542")
 
     assert_power_error(
       2,
