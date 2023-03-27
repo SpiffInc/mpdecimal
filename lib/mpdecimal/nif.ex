@@ -20,7 +20,7 @@ defmodule MPDecimal.Nif do
   end
 
   def exp(_input) do
-    raise "NIF ln/1 not implemented"
+    raise "NIF exp/1 not implemented"
   end
 
   def ln(_input) do

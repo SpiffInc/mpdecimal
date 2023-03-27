@@ -6,20 +6,16 @@ defmodule LnTest do
     assert_ln(1, "0")
     assert_ln(2, "0.6931471805599453094172321215")
     assert_ln(256, "5.545177444479562475337856972")
-
-    assert_ln("1", "0")
-    assert_ln("2", "0.6931471805599453094172321215")
-    assert_ln("256", "5.545177444479562475337856972")
   end
 
-  test "decimal input values with integer powers" do
+  test "decimal input values" do
     assert_ln("0.5", "-0.6931471805599453094172321215")
     assert_ln("1.5", "0.4054651081081643819780131155")
     assert_ln("3.2343245", "1.173820096257234794026330732")
     assert_ln("1000.2443", "6.907999549145751305830408424")
   end
 
-  test "very large and very small values" do
+  test "extreme values" do
     assert_ln("0.00000001", "-18.42068074395236547214393164")
     assert_ln("10000000","16.11809565095831978812594018")
   end

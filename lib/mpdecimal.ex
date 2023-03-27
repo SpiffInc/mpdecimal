@@ -18,6 +18,10 @@ defmodule MPDecimal do
   def exp(%Decimal{} = input) do
     # Add the null terminator to the end of each string argument so that it
     # forms a valid cstring for consumption by the NIF.
+    if :gt == Decimal.cmp(input, 1000000) && Decimal.new("Infinity") != input do
+      raise(MPDecimal.Error, message: "This function is defined for inputs >= -1000000 and <= 1000000, except for the special case of +/-Infinity.")
+    end
+
     input = Decimal.to_string(input, :xsd) <> "\0"
 
     case Nif.exp(input) do
