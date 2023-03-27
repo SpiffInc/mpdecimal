@@ -60,12 +60,15 @@ defmodule PowerTest do
     # assert_power(9, "10000", "2.661303427217419791978201712E+9542")
 
     assert_power_error(
-      2, "-10000000",
-      "This function is defined x ^ y where y >= -10000 and <= 1E-10000, except for the special case of +/-Infinity."
+      2,
+      "-10000000",
+      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
     )
+
     assert_power_error(
-      2, "10000000",
-      "This function is defined x ^ y where y >= -10000 and <= 1E-10000, except for the special case of +/-Infinity."
+      2,
+      "10000000",
+      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
     )
   end
 

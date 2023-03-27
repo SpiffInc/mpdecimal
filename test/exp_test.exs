@@ -22,7 +22,7 @@ defmodule ExpTest do
 
     assert_exp_error(
       "10000000",
-      "This function is defined for inputs >= -1000000 and <= 1000000, except for the special case of +/-Infinity."
+      "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
     )
   end
 

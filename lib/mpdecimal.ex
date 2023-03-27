@@ -21,7 +21,7 @@ defmodule MPDecimal do
     if :gt == Decimal.compare(input, 1_000_000) && Decimal.new("Infinity") != input do
       raise(MPDecimal.Error,
         message:
-          "This function is defined for inputs >= -1000000 and <= 1000000, except for the special case of +/-Infinity."
+          "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
       )
     end
 
@@ -45,10 +45,11 @@ defmodule MPDecimal do
   end
 
   def power(%Decimal{} = base, %Decimal{} = exponent) do
-    if (:lt == Decimal.compare(exponent, -10_000) || :gt == Decimal.compare(exponent, 10_000)) && Decimal.new("Infinity") != exponent do
+    if (:lt == Decimal.compare(exponent, -10_000) || :gt == Decimal.compare(exponent, 10_000)) &&
+         Decimal.new("Infinity") != exponent do
       raise(MPDecimal.Error,
         message:
-          "This function is defined x ^ y where y >= -10000 and <= 1E-10000, except for the special case of +/-Infinity."
+          "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
       )
     end
 
