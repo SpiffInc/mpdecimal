@@ -17,7 +17,7 @@ defmodule LnTest do
 
   test "extreme values" do
     assert_ln("0.00000001", "-18.42068074395236547214393164")
-    assert_ln("10000000","16.11809565095831978812594018")
+    assert_ln("10000000", "16.11809565095831978812594018")
   end
 
   test "infinity cases" do

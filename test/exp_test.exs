@@ -16,16 +16,20 @@ defmodule ExpTest do
   end
 
   test "extreme values" do
-    assert_exp("-1000000","3.296831478088558578968907969E-434295")
+    assert_exp("-1000000", "3.296831478088558578968907969E-434295")
     assert_exp("0.00000001", "1.000000010000000050000000167")
-    assert_exp("1000000","3.033215396802087545086402141E+434294")
-    assert_exp_error("10000000", "This function is defined for inputs >= -1000000 and <= 1000000, except for the special case of +/-Infinity.")
+    assert_exp("1000000", "3.033215396802087545086402141E+434294")
+
+    assert_exp_error(
+      "10000000",
+      "This function is defined for inputs >= -1000000 and <= 1000000, except for the special case of +/-Infinity."
+    )
   end
 
   test "zero cases" do
     assert_exp(0, "1")
   end
-  
+
   test "infinity cases" do
     assert_exp("-Infinity", 0)
     assert_exp("Infinity", "Infinity")
