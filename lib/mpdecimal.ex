@@ -15,6 +15,28 @@ defmodule MPDecimal do
       iex> MPDecimal.power(four, Decimal.new("0.5"))
       #Decimal<2.000000000000000000000000000>
   """
+  def exp(%Decimal{} = input) do
+    # Add the null terminator to the end of each string argument so that it
+    # forms a valid cstring for consumption by the NIF.
+    input = Decimal.to_string(input, :xsd) <> "\0"
+
+    case Nif.exp(input) do
+      {:ok, result} -> Decimal.new(result)
+      {:error, message} -> raise(MPDecimal.Error, message: message)
+    end
+  end
+  
+  def ln(%Decimal{} = input) do
+    # Add the null terminator to the end of each string argument so that it
+    # forms a valid cstring for consumption by the NIF.
+    input = Decimal.to_string(input, :xsd) <> "\0"
+
+    case Nif.ln(input) do
+      {:ok, result} -> Decimal.new(result)
+      {:error, message} -> raise(MPDecimal.Error, message: message)
+    end
+  end
+
   def power(%Decimal{} = base, %Decimal{} = exponent) do
     # Add the null terminator to the end of each string argument so that it
     # forms a valid cstring for consumption by the NIF.

@@ -1,4 +1,4 @@
-defmodule MPDecimalTest do
+defmodule PowerTest do
   use ExUnit.Case
   doctest MPDecimal
 
