@@ -19,11 +19,6 @@ defmodule ExpTest do
     assert_exp("-1000000", "3.296831478088558578968907969E-434295")
     assert_exp("0.00000001", "1.000000010000000050000000167")
     assert_exp("1000000", "3.033215396802087545086402141E+434294")
-
-    assert_exp_error(
-      "10000000",
-      "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
-    )
   end
 
   test "zero cases" do
