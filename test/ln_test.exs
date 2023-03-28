@@ -30,6 +30,11 @@ defmodule LnTest do
     assert_ln_error("-2", "[IEEE_Invalid_operation]")
     assert_ln_error(-2, "[IEEE_Invalid_operation]")
     assert_ln_error("-1.43434", "[IEEE_Invalid_operation]")
+
+    assert_ln_error(
+      "1E10001",
+      "This function is defined for inputs > 0 and <= 1E10000 and where the input is +Infinity."
+    )
   end
 
   defp assert_ln(input, expected_value) do

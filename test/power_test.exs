@@ -58,18 +58,6 @@ defmodule PowerTest do
     assert_power("0.1", "-10000", "1E+10000")
     assert_power("1.1", "1E-10000", "1.000000000000000000000000000")
     assert_power(9, "10000", "2.661303427217419791978201712E+9542")
-
-    assert_power_error(
-      2,
-      "-10000000",
-      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
-    )
-
-    assert_power_error(
-      2,
-      "10000000",
-      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
-    )
   end
 
   test "infinity cases" do
@@ -85,6 +73,18 @@ defmodule PowerTest do
     assert_power_error("-2", "2.5", "[IEEE_Invalid_operation]")
     assert_power_error("-2", "0.9", "[IEEE_Invalid_operation]")
     assert_power_error("-2", "-1.5", "[IEEE_Invalid_operation]")
+
+    assert_power_error(
+      2,
+      "-10000000",
+      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
+    )
+
+    assert_power_error(
+      2,
+      "10000000",
+      "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
+    )
   end
 
   defp assert_power(base, power, expected_value) do

@@ -35,6 +35,18 @@ defmodule ExpTest do
     assert_exp("Infinity", "Infinity")
   end
 
+  test "error cases" do
+    assert_exp_error(
+      "1000001",
+      "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
+    )
+
+    assert_exp_error(
+      "-1000001",
+      "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
+    )
+  end
+
   defp assert_exp(input, expected_value) do
     assert result = MPDecimal.exp(Decimal.new(input))
     assert Decimal.eq?(result, Decimal.new(expected_value))
