@@ -19,7 +19,6 @@ defmodule LnTest do
     assert_ln(0, "-Infinity")
     assert_ln("0.0", "-Infinity")
     assert_ln("Infinity", "Infinity")
-    
   end
 
   test "error cases" do
