@@ -28,4 +28,10 @@ defmodule ExpTest do
     assert result = MPDecimal.exp(Decimal.new(input))
     assert Decimal.eq?(result, Decimal.new(expected_value))
   end
+
+  defp assert_exp_error(input, error_message) do
+    assert_raise(MPDecimal.Error, error_message, fn ->
+      MPDecimal.exp(Decimal.new(input))
+    end)
+  end
 end

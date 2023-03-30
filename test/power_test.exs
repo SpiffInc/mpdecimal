@@ -60,6 +60,9 @@ defmodule PowerTest do
     assert_power("Infinity", 0, 1)
     assert_power(1, "Infinity", 1)
     assert_power(2, "Infinity", "Infinity")
+    assert_power("-Infinity", 0, 1)
+    assert_power(1, "-Infinity", 1)
+    assert_power(2, "-Infinity", "0")
   end
 
   test "error cases" do

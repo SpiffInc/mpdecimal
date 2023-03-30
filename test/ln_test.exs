@@ -19,12 +19,14 @@ defmodule LnTest do
     assert_ln(0, "-Infinity")
     assert_ln("0.0", "-Infinity")
     assert_ln("Infinity", "Infinity")
+    
   end
 
   test "error cases" do
     assert_ln_error("-2", "[IEEE_Invalid_operation]")
     assert_ln_error(-2, "[IEEE_Invalid_operation]")
     assert_ln_error("-1.43434", "[IEEE_Invalid_operation]")
+    assert_ln_error("-Infinity", "[IEEE_Invalid_operation]")
   end
 
   defp assert_ln(input, expected_value) do
