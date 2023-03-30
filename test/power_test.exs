@@ -1,6 +1,5 @@
 defmodule PowerTest do
   use ExUnit.Case
-  doctest MPDecimal
 
   test "positive integer exponents" do
     assert_power(2, 2, "4.0")

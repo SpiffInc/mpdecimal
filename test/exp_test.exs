@@ -1,6 +1,5 @@
 defmodule ExpTest do
   use ExUnit.Case
-  doctest MPDecimal
 
   test "positive integer exponents" do
     assert_exp(1, "2.718281828459045235360287471")

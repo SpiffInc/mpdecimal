@@ -1,6 +1,5 @@
 defmodule LnTest do
   use ExUnit.Case
-  doctest MPDecimal
 
   test "positive integer exponents" do
     assert_ln(1, "0")
