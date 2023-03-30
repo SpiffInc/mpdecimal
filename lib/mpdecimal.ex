@@ -16,16 +16,6 @@ defmodule MPDecimal do
       #Decimal<2.000000000000000000000000000>
   """
   def exp(%Decimal{} = input) do
-    # Add limits to the inputs to avoid calculation timeouts
-    if (:lt == Decimal.compare(input, -1_000_000) && Decimal.new("-Infinity") != input) ||
-         (:gt == Decimal.compare(input, 1_000_000) &&
-            Decimal.new("Infinity") != input) do
-      raise(MPDecimal.Error,
-        message:
-          "This function is defined for inputs >= -1000000 and <= 1000000 and where the input is +/-Infinity."
-      )
-    end
-
     # Add the null terminator to the end of each string argument so that it
     # forms a valid cstring for consumption by the NIF.
     input = Decimal.to_string(input, :xsd) <> "\0"
@@ -37,13 +27,6 @@ defmodule MPDecimal do
   end
 
   def ln(%Decimal{} = input) do
-    if :gt == Decimal.compare(input, Decimal.new("1E10000")) && Decimal.new("Infinity") != input do
-      raise(MPDecimal.Error,
-        message:
-          "This function is defined for inputs > 0 and <= 1E10000 and where the input is +Infinity."
-      )
-    end
-
     input = Decimal.to_string(input, :xsd) <> "\0"
 
     case Nif.ln(input) do
@@ -53,15 +36,6 @@ defmodule MPDecimal do
   end
 
   def power(%Decimal{} = base, %Decimal{} = exponent) do
-    if (:lt == Decimal.compare(exponent, -10_000) &&
-          Decimal.new("-Infinity") != exponent) ||
-         (:gt == Decimal.compare(exponent, 10_000) && Decimal.new("Infinity") != exponent) do
-      raise(MPDecimal.Error,
-        message:
-          "This function is defined x ^ y where y >= -10000 and <= 1E-10000 and where y = +/-Infinity."
-      )
-    end
-
     base = Decimal.to_string(base, :xsd) <> "\0"
     exponent = Decimal.to_string(exponent, :xsd) <> "\0"
 
