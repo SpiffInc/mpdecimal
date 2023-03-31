@@ -24,6 +24,19 @@ The mpdecimal library is configured to use the memory allocator provided by the 
 
 As a rule of thumb a well-behaving native function should return to its caller before a millisecond has passed. The power() function seems to finish in ~100 μs, so we are an order of magnitude away from needing to worry about manual execution time managment. (Breaking a single behavior into multiple function calls, or calling enif_consume_timeslice())
 
+### Stress Test
+
+As a way of checking for memory leaks, race conditions or nif communication errors, we have created a stress test. This can be run locally while monitoring the process both with tools like observer, or with external tools like htop.
+To run the stress test you can do the following:
+
+```shell
+mix run --no-halt bench/stress_test.exs > stress_output.txt
+```
+
+Now watch monitor the beam until it becomes idle again and check that the memory usage is flat. You can also check the contents of the `stress_output.txt` which should container the `1,000 processes * 10,000 random numbers = 10M` periods that were printed out along with a few notes like "all processes started".
+
+> You may want to close down your editor to make sure there isn't a lanaguage server running in the background. This way you can be sure which process you're watching.
+
 ### TODOS
 
 * Expose more of the functionality of the mpdecimal library.
