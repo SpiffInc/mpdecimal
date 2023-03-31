@@ -29,3 +29,4 @@ mpdecimal-*.tar
 
 # Temporary files for e.g. tests
 /tmp
+stress_output.txt
