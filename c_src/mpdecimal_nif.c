@@ -112,6 +112,156 @@ static ERL_NIF_TERM nif_make_error_tuple(ErlNifEnv* env, mpd_context_t* ctx)
   return enif_make_tuple2(env, enif_make_atom(env, "error"), signal_list_term);
 }
 
+static ERL_NIF_TERM mpdecimal_exp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+  ERL_NIF_TERM result_term;
+  char* result_string;
+  mpd_ssize_t result_strlen;
+
+  ErlNifBinary input_binary;
+  
+  mpd_context_t ctx;
+  mpd_t* input;
+  mpd_t* result;
+
+  // Convert parameters into Erlang binaries.
+  if (argc != 1 ||
+  	  !enif_inspect_binary(env, argv[0], &input_binary)) {
+    return enif_make_badarg(env);
+  }
+
+#ifdef NIF_DEBUG
+  printf("----Parameters----\r\n");
+  nif_debug_print_parameter("input", &argv[0], &input_binary);
+#endif
+
+  // Ensure Thread Safety
+  // Create a copy of the (previously-initialized) MPD context on the stack.
+  // Hereafter, any function calls into the mpdecimal library interact with
+  // this copy of the context, which is used only by the current thread.
+  ctx = *((mpd_context_t*) enif_priv_data(env));
+
+  input = mpd_new(&ctx);
+  if (ctx.newtrap) {
+    return nif_make_error_tuple(env, &ctx);
+  }
+  
+  // Expects the binary to contain a cstring, properly formatted with the null
+  // terminator by Elixir code.
+  mpd_set_string(input, (char*) input_binary.data, &ctx);
+  if (ctx.newtrap) {
+    mpd_del(input);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  result = mpd_new(&ctx);
+  if (ctx.newtrap) {
+    mpd_del(input);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  mpd_exp(result, input, &ctx);
+  mpd_del(input);
+  if (ctx.newtrap) {
+    mpd_del(result);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 1);
+  
+  mpd_del(result);
+
+  if (result_string == NULL) {
+    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
+    // sensitive.
+    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  // Package the result string into an Erlang binary.
+  memcpy(enif_make_new_binary(env, result_strlen, &result_term),
+         result_string,
+         result_strlen);
+  mpd_free(result_string);
+
+  return enif_make_tuple2(env, enif_make_atom(env, "ok"), result_term);
+}
+
+static ERL_NIF_TERM mpdecimal_ln(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+  ERL_NIF_TERM result_term;
+  char* result_string;
+  mpd_ssize_t result_strlen;
+
+  ErlNifBinary input_binary;
+  
+  mpd_context_t ctx;
+  mpd_t* input;
+  mpd_t* result;
+
+  // Convert parameters into Erlang binaries.
+  if (argc != 1 ||
+  	  !enif_inspect_binary(env, argv[0], &input_binary)) {
+    return enif_make_badarg(env);
+  }
+
+#ifdef NIF_DEBUG
+  printf("----Parameters----\r\n");
+  nif_debug_print_parameter("input", &argv[0], &input_binary);
+#endif
+
+  // Ensure Thread Safety
+  // Create a copy of the (previously-initialized) MPD context on the stack.
+  // Hereafter, any function calls into the mpdecimal library interact with
+  // this copy of the context, which is used only by the current thread.
+  ctx = *((mpd_context_t*) enif_priv_data(env));
+
+  input = mpd_new(&ctx);
+  if (ctx.newtrap) {
+    return nif_make_error_tuple(env, &ctx);
+  }
+  
+  // Expects the binary to contain a cstring, properly formatted with the null
+  // terminator by Elixir code.
+  mpd_set_string(input, (char*) input_binary.data, &ctx);
+  if (ctx.newtrap) {
+    mpd_del(input);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  result = mpd_new(&ctx);
+  if (ctx.newtrap) {
+    mpd_del(input);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  mpd_ln(result, input, &ctx);
+  mpd_del(input);
+  if (ctx.newtrap) {
+    mpd_del(result);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  result_strlen = mpd_to_sci_size(&result_string, result, /* fmt */ 1);
+  
+  mpd_del(result);
+
+  if (result_string == NULL) {
+    // Manually add MPD_Malloc_error since mpd_to_sci_size is not context
+    // sensitive.
+    mpd_addstatus_raise(&ctx, MPD_Malloc_error);
+    return nif_make_error_tuple(env, &ctx);
+  }
+
+  // Package the result string into an Erlang binary.
+  memcpy(enif_make_new_binary(env, result_strlen, &result_term),
+         result_string,
+         result_strlen);
+  mpd_free(result_string);
+
+  return enif_make_tuple2(env, enif_make_atom(env, "ok"), result_term);
+}
+
 static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
   ERL_NIF_TERM result_term;
@@ -210,7 +360,10 @@ static ERL_NIF_TERM mpdecimal_power(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 
 static ErlNifFunc funcs[] = {
   // {name, arity, fptr}
+  {"exp", 1, mpdecimal_exp},
+  {"ln", 1, mpdecimal_ln},
   {"power", 2, mpdecimal_power}
 };
+
 
 ERL_NIF_INIT(Elixir.MPDecimal.Nif, funcs, load, /* reload (deprecated) */ NULL, upgrade, unload)

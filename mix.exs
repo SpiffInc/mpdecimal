@@ -35,7 +35,6 @@ defmodule Mpdecimal.MixProject do
     [
       {:decimal, "~> 2.0"},
       {:elixir_make, "~> 0.6", runtime: false},
-
       {:ex_doc, "~> 0.24.2", only: :dev},
       {:benchee, "~> 1.0", only: :dev}
     ]

@@ -19,6 +19,14 @@ defmodule MPDecimal.Nif do
     :erlang.load_nif(path, 0)
   end
 
+  def exp(_input) do
+    raise "NIF exp/1 not implemented"
+  end
+
+  def ln(_input) do
+    raise "NIF ln/1 not implemented"
+  end
+
   def power(_base, _power) do
     raise "NIF power/2 not implemented"
   end
