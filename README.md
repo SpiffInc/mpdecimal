@@ -33,7 +33,7 @@ To run the stress test you can do the following:
 mix run --no-halt bench/stress_test.exs > stress_output.txt
 ```
 
-Now watch monitor the beam until it becomes idle again and check that the memory usage is flat. You can also check the contents of the `stress_output.txt` which should container the `1,000 processes * 10,000 random numbers = 10M` periods that were printed out along with a few notes like "all processes started".
+Now watch monitor the beam until it becomes idle again and check that the memory usage is flat. You can also check the contents of the `stress_output.txt` which should container the `500 processes * 40,000 random numbers = 20M` periods that were printed out along with a few notes like "processes started".
 
 > You may want to close down your editor to make sure there isn't a lanaguage server running in the background. This way you can be sure which process you're watching.
 

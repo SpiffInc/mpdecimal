@@ -1,89 +1,81 @@
 defmodule Stress do
-  def reporter do
+  def generator(how_many) do
+    float = (:rand.uniform_real() * 9.0) + 1.0
+    dec = Decimal.from_float(float)
     receive do
-      {:decimal, _dec} ->
+      {:req, pid} ->
+        case how_many do
+          1 ->
+            send pid, {:finished, dec}
+          _other ->
+            send pid, {:dec, dec}
+            generator(how_many - 1)
+        end
+    end
+  end
+
+  def reporter(operator) do
+    send operator, {:req, self()}
+    receive do
+      {:dec, dec} ->
+        report_on(dec)
+        reporter(operator)
+
+      {:finished, dec} ->
+        report_on(dec)
         IO.write(".")
-        reporter()
     end
   end
 
-  # takes in numbers beteeen 1.0 and 10.0 and squares them
-  # producing numbers between 1.0 and 100.0
-  @two Decimal.new("2.0")
-  def squarer(reporters) do
+  @one_hundred Decimal.new("100.0")
+  @one Decimal.new("1.0")
+  def report_on(decimal) do
+    if Decimal.compare(decimal, @one) in [:gt, :eq] do
+      if Decimal.compare(decimal, @one_hundred) in [:lt, :eq] do
+        IO.write(".")
+      else
+        IO.puts "UNEXPECTED #{Decimal.to_string(decimal)}"
+      end
+    else
+      IO.puts "UNEXPECTED #{Decimal.to_string(decimal)}"
+    end
+  end
+
+  def operator(source, fun) do
+    send source, {:req, self()}
     receive do
-      {:decimal, dec} ->
-        result = MPDecimal.power(dec, @two)
-        [reporter] = Enum.take_random(reporters, 1)
-        Process.send(reporter, {:decimal, result}, [])
-        squarer(reporters)
+      {:dec, dec} ->
+        dec = fun.(dec)
+        receive do
+          {:req, pid} ->
+            send pid, {:dec, dec}
+        end
+        operator(source, fun)
+      {:finished, dec} ->
+        dec = fun.(dec)
+        receive do
+          {:req, pid} ->
+            send pid, {:finished, dec}
+        end
     end
-  end
-
-  # takes in numbers betwen 0.0 and 2.303... and produces
-  # numbers between 1.0 and 10.0
-  def expers(squarers) do
-    receive do
-      {:decimal, dec} ->
-        result = MPDecimal.exp(dec)
-        [squarer] = Enum.take_random(squarers, 1)
-        Process.send(squarer, {:decimal, result}, [])
-        expers(squarers)
-    end
-  end
-
-  # takes in numbers between 1.0 and 10.0 and produces
-  # numbers between 0 and 2.303...
-  def lners(expers) do
-    receive do
-      {:decimal, dec} ->
-        result = MPDecimal.ln(dec)
-        [exper] = Enum.take_random(expers, 1)
-        Process.send(exper, {:decimal, result}, [])
-        lners(expers)
-    end
-  end
-
-  # sends decimal numbers with values between 1.0 and 10.0
-  def feed(lners, decimals_per_process) do
-    lners
-    |> Enum.map(fn pid ->
-      Task.async(fn ->
-        (1..decimals_per_process) |> Enum.each(fn _ ->
-          float = (:rand.uniform_real() * 9.0) + 1.0
-          dec = Decimal.from_float(float)
-          Process.send(pid, {:decimal, dec}, [])
-        end)
-      end)
-    end)
-    |> Enum.map(fn task -> Task.await(task, 600_000) end)
   end
 end
 
+num_processes = 500
+numbers_per_process = 40_000
 
+two = Decimal.new("2.0")
+square_fn = fn dec -> MPDecimal.power(dec, two) end
+exp_fn = fn dec -> MPDecimal.exp(dec) end
+ln_fn = fn dec -> MPDecimal.ln(dec) end
 
-reporters = Enum.map(1..1_000, fn(_i) ->
-  spawn(&Stress.reporter/0)
+(1..num_processes)
+|> Enum.map(fn _ ->
+  generator = spawn(fn -> Stress.generator(numbers_per_process) end)
+  squarer = spawn(fn -> Stress.operator(generator, square_fn) end)
+  exper = spawn(fn -> Stress.operator(squarer, exp_fn) end)
+  lner = spawn(fn -> Stress.operator(exper, ln_fn) end)
+  Task.async(fn -> Stress.reporter(lner) end)
 end)
-
-squarers = Enum.map(1..1_000, fn(_i) ->
-  spawn(fn ->
-    Stress.squarer(reporters)
-  end)
-end)
-
-expers = Enum.map(1..1_000, fn(_i) ->
-  spawn(fn ->
-    Stress.squarer(squarers)
-  end)
-end)
-
-lners = Enum.map(1..1_000, fn(_i) ->
-  spawn(fn ->
-    Stress.squarer(expers)
-  end)
-end)
+|> Enum.map(& Task.await(&1, 60 * 60_000))
 IO.puts "processes started"
-
-Stress.feed(lners, 10_000)
-IO.puts "processes have been fed"
