@@ -19,18 +19,20 @@ MPD_LIB_TARFILE = $(wildcard $(C_LIB_DIR)/*.tar.gz)
 MPD_LIB_DIR = $(C_LIB_DIR)/$(shell tar tzf $(MPD_LIB_TARFILE) | head -1)
 MPD_LIB = $(MPD_LIB_DIR:/=)/libmpdec/libmpdec.a
 
-ifneq ($(CROSSCOMPILE),)
-    # crosscompiling
-    CFLAGS += -fPIC
+ifeq ($(CROSSCOMPILE),)
+	# Not crosscompiling, so check that we're on Linux for whether to compile the NIF.
+	ifeq ($(shell uname -s),Linux)
+		CFLAGS += -fPIC
+		LDFLAGS += -fPIC -shared
+	else
+		CFLAGS += -Ic_src/compat
+		LDFLAGS += -undefined dynamic_lookup -dynamiclib
+		USE_STUB = yes
+	endif
 else
-    # not crosscompiling
-    ifneq ($(OS),Windows_NT)
-        CFLAGS += -fPIC
-
-        ifeq ($(shell uname),Darwin)
-            LDFLAGS += -dynamiclib -undefined dynamic_lookup
-        endif
-    endif
+	# Crosscompiled build
+	LDFLAGS += -fPIC -shared
+	CFLAGS += -fPIC
 endif
 
 calling_from_make:
